@@ -1,8 +1,15 @@
 // src/contexts/AuthContext.tsx
-'use client'; // Context는 클라이언트 사이드에서 상태를 다루므로 'use client'
+"use client";
 
-import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+// Context는 클라이언트 사이드에서 상태를 다루므로 'use client'
+import { useRouter } from "next/navigation";
+import React, {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -43,8 +50,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     // 예시: localStorage.removeItem('userToken');
     // localStorage.removeItem('userData');
-    console.log('로그아웃 (Context)');
-    router.push('/'); // 로그아웃 후 홈으로 이동
+    console.log("로그아웃 (Context)");
+    router.push("/"); // 로그아웃 후 홈으로 이동
   };
 
   return (
@@ -57,7 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
