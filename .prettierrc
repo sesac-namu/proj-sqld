@@ -1,5 +1,17 @@
 {
+  "importOrder": [
+    "<BUILTIN_MODULES>",
+    "<TYPES>",
+    "<TYPES>^[.]",
+    "<THIRD_PARTY_MODULES>",
+    "^~/(.*)$",
+    "^@/(.*)$",
+    "^[.]",
+    ".css$"
+  ],
+  "tailwindStylesheet": "./apps/web/src/app/globals.css",
   "plugins": [
+    "@ianvs/prettier-plugin-sort-imports",
     "prettier-plugin-tailwindcss"
   ]
 }
