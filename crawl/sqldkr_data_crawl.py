@@ -31,6 +31,7 @@ async def fetch_table(playwright, idx, url):
         await page.locator('body > div.login-container > button').click()
         
 
+
         # ✅ 비밀번호 필드가 나타날 때까지 기다림
         await page.wait_for_selector('#identifierId', timeout=10000)
         await page.locator('#identifierId').fill('remember33330')
@@ -54,11 +55,15 @@ async def fetch_table(playwright, idx, url):
             
         datas = []
         for idx in range(50):
-            current_url = f'https://www.sqld.kr/mock-exam/{page_id}/question/{idx}?is_review=True'
-            await page.goto(current_url, wait_until='domcontentloaded')
+            try:
+                current_url = f'https://www.sqld.kr/mock-exam/{page_id}/question/{idx}?is_review=True'
+                await page.goto(current_url, wait_until='networkidle')
 
-            # 태그 생길때 까지 기다리기
-            await page.wait_for_selector('#content-container > div.question-content')
+                # 태그 생길때 까지 기다리기
+                await page.wait_for_selector('#content-container > div.question-content')
+            except:
+                current_url = f'https://www.sqld.kr/mock-exam/{page_id}/question/{idx}?is_review=True'
+                await page.goto(current_url, wait_until='networkidle')
 
             # 문제 제목
             question_title = await page.locator('#content-container > div.question-content').inner_text()
@@ -129,7 +134,7 @@ async def main():
     
     # urls = urls[-1:]
     # print(urls)
-    urls = split_url(urls, 5)
+    urls = split_url(urls, 2)
     
     page_index = range(8000, 6000)
     
