@@ -62,3 +62,7 @@ pnpm run {script}
 | `build` | 프로젝트 빌드 |
 | `format` | 프로젝트별 포매팅 |
 | `lint` | 프로젝트별 린팅 |
+| `db:generate` | 데이터베이스 마이그레이션 SQL 생성 |
+| `db:migrate` | 데이터베이스 마이그레이션 |
+| `db:push` | 데이터베이스에 스키마 적용 |
+| `db:studio` | 로컬 데이터베이스 스튜디오 |
