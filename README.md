@@ -1,4 +1,4 @@
-# 🤖 Project with `flet`
+# 🤖 AI SQLD CBT Project
 
 - Start Team on May 19, 2025
 
