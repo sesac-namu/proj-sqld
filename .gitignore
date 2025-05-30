@@ -164,3 +164,4 @@ staticfiles/
 # Output files from local execution (if any Python scripts generate these)
 # output/
 # results/
+data/
