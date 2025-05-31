@@ -1,5 +1,4 @@
 // src/app/login/page.tsx
-
 'use client';
 
 import Link from 'next/link';
@@ -14,6 +13,7 @@ export default function LoginPage() {
   // 이미 로그인 상태면 다른 페이지로 리다이렉트 (예: 마이페이지 또는 홈)
   useEffect(() => {
     if (isLoggedIn) {
+
       router.push('/mypage'); // 또는 '/'
     }
   }, [isLoggedIn, router]);
@@ -24,6 +24,7 @@ export default function LoginPage() {
     const identifier = formData.get('identifier') as string; // 타입 단언
     const password = formData.get('password') as string; // 타입 단언
     console.log('Login attempt:', { identifier, password });
+
 
     // --- 실제 API 호출 로직 (주석 처리된 예시) ---
     // try {

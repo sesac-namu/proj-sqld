@@ -58,7 +58,6 @@ const getQuizDataById = (id: string): QuizData | null => {
 export default function QuizPage() {
   const params = useParams();
   const quizId = params.id as string; // params.id는 string | string[] 일 수 있으므로 타입 단언
-
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -115,6 +114,7 @@ export default function QuizPage() {
 
   if (isQuizFinished) {
     return (
+
       <div className='max-w-lg mx-auto mt-10 bg-white p-8 rounded-lg shadow-xl text-center'>
         <h2 className='text-2xl font-bold text-slate-700 mb-6'>퀴즈 완료!</h2>
         <p className='text-xl mb-4'>

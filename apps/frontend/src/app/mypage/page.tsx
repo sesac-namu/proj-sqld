@@ -21,6 +21,7 @@ export default function MyPage() {
   useEffect(() => {
     if (!isLoggedIn) {
       router.push('/login?redirect=/mypage'); // 로그인 후 돌아올 경로 전달 (선택 사항)
+
     }
   }, [isLoggedIn, router]);
 

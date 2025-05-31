@@ -7,6 +7,7 @@ import Link from 'next/link';
 // 가상 퀴즈 데이터 (나중에 실제 데이터로 교체)
 const quizzes = [
   {
+
     id: 'sqld-2023-1',
     title: 'SQLD 2023년 제 1회 기출',
     description: '최신 SQLD 기출문제로 실력을 점검하세요.',

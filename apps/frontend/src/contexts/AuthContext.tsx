@@ -1,4 +1,5 @@
 // src/contexts/AuthContext.tsx
+
 'use client'; // Context는 클라이언트 사이드에서 상태를 다루므로 'use client'
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
