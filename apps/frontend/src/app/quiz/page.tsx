@@ -1,6 +1,6 @@
 // src/app/quiz/page.tsx
 
-'use client'; // 상태 관리를 위해 클라이언트 컴포넌트
+'use client';
 
 import Link from 'next/link';
 
@@ -29,8 +29,8 @@ const quizzes = [
 export default function QuizListPage() {
   return (
     <div>
-      <h1 className='text-3xl font-bold text-slate-700 mb-8 mt-5'>문제 목록</h1>
-      <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
+      <h1 className='text-3xl font-bold text-slate-700 ml-10 mt-5'>문제 목록</h1>
+      <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3 p-7'>
         {quizzes.map((quiz) => (
           <div
             key={quiz.id}
