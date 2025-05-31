@@ -59,7 +59,7 @@ class SQLDCrawler:
         """개별 문제 데이터를 가져오는 함수"""
         try:
             # 문제 URL로 이동
-            url = f'https://www.sqld.kr/mock-exam/{page_id}/question/{question_idx}?is_review=True'
+            url = f'https://www.sqld.kr/practice'
             await page.goto(url, wait_until='domcontentloaded', timeout=15000)
             
             # 문제 제목
