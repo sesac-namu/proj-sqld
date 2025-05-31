@@ -77,6 +77,8 @@ export default function LoginPage() {
         </p>
       </div>
 
+      {/* ------------------------- */}
+
       <div className='mt-8 sm:mx-auto sm:w-full sm:max-w-md'>
         <div className='bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10'>
           <form className='space-y-6' onSubmit={handleSubmit}>
@@ -85,7 +87,7 @@ export default function LoginPage() {
                 htmlFor='identifier'
                 className='block text-sm font-medium leading-6 text-slate-900'
               >
-                아이디 (테스트용)
+                ID
               </label>
               <div className='mt-2'>
                 <input
@@ -95,17 +97,19 @@ export default function LoginPage() {
                   autoComplete='username'
                   required
                   className='block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6'
-                  placeholder='testuser'
+                  placeholder='ID'
                 />
               </div>
             </div>
+
+            {/* ------------------------- */}
 
             <div>
               <label
                 htmlFor='password'
                 className='block text-sm font-medium leading-6 text-slate-900'
               >
-                비밀번호 (테스트용)
+                Password
               </label>
               <div className='mt-2'>
                 <input

@@ -36,6 +36,7 @@ export default function MyPage() {
     );
   }
 
+  // ---------------------------------------------------------
   // 로그인된 사용자 정보 표시
   return (
     <div className='max-w-2xl mx-auto mt-10 bg-white p-8 rounded-lg shadow-md'>
