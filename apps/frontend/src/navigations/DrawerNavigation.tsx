@@ -1,14 +1,14 @@
 // src/navigations/DrawerNavigation.tsx
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon } from "@heroicons/react/24/outline";
+import Link from "next/link";
 
 interface NavLinkItem {
   href?: string;
   label: string;
   action?: () => void;
-  type?: 'link' | 'button';
+  type?: "link" | "button";
   requiresAuth?: boolean;
   guestOnly?: boolean;
 }
@@ -24,50 +24,54 @@ export default function DrawerNavigation({
   isOpen,
   toggleDrawer,
   navLinks,
-  siteTitle = 'SQLD CBT',
+  siteTitle = "SQLD CBT",
 }: DrawerNavigationProps) {
   if (!isOpen) {
     return null;
   }
 
   return (
-    <div className='fixed inset-0 z-40 md:hidden'>
+    <div className="fixed inset-0 z-40 md:hidden">
       <div
-        className='fixed inset-0 bg-black/30 backdrop-blur-sm'
+        className="fixed inset-0 bg-black/30 backdrop-blur-sm"
         onClick={toggleDrawer}
-        aria-hidden='true'
+        aria-hidden="true"
       />
-      <div className='fixed top-0 right-0 h-full w-64 bg-slate-800 p-6 shadow-xl'>
-        <div className='flex items-center justify-between mb-6'>
-          <Link href='/' className='text-xl font-bold text-white' onClick={toggleDrawer}>
+      <div className="fixed right-0 top-0 h-full w-64 bg-slate-800 p-6 shadow-xl">
+        <div className="mb-6 flex items-center justify-between">
+          <Link
+            href="/"
+            className="text-xl font-bold text-white"
+            onClick={toggleDrawer}
+          >
             {siteTitle}
           </Link>
           <button
             onClick={toggleDrawer}
-            aria-label='메뉴 닫기'
-            className='p-1 rounded-md text-slate-300 hover:bg-slate-700 hover:text-white'
+            aria-label="메뉴 닫기"
+            className="rounded-md p-1 text-slate-300 hover:bg-slate-700 hover:text-white"
           >
-            <XMarkIcon className='h-6 w-6' />
+            <XMarkIcon className="h-6 w-6" />
           </button>
         </div>
         <nav>
-          <ul className='space-y-4'>
+          <ul className="space-y-4">
             {navLinks.map((link, index) => (
               <li key={`drawer-${link.label}-${index}`}>
-                {link.type === 'button' ? (
+                {link.type === "button" ? (
                   <button
                     onClick={() => {
                       if (link.action) link.action();
                       toggleDrawer(); // 액션 후 드로어 닫기
                     }}
-                    className='block w-full text-left rounded-md py-2 px-3 text-base font-medium text-slate-200 hover:bg-slate-700 hover:text-white transition-colors'
+                    className="block w-full rounded-md px-3 py-2 text-left text-base font-medium text-slate-200 transition-colors hover:bg-slate-700 hover:text-white"
                   >
                     {link.label}
                   </button>
                 ) : (
                   <Link
                     href={link.href!}
-                    className='block rounded-md py-2 px-3 text-base font-medium text-slate-200 hover:bg-slate-700 hover:text-white transition-colors'
+                    className="block rounded-md px-3 py-2 text-base font-medium text-slate-200 transition-colors hover:bg-slate-700 hover:text-white"
                     onClick={toggleDrawer} // 링크 클릭 시 드로어 닫기
                   >
                     {link.label}
