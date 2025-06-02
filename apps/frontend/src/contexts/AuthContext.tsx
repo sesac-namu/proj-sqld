@@ -1,14 +1,15 @@
 // src/contexts/AuthContext.tsx
-"use client"; // Context는 클라이언트 사이드에서 상태를 다루므로 'use client'
+"use client";
 
+// Context는 클라이언트 사이드에서 상태를 다루므로 'use client'
+import { useRouter } from "next/navigation";
 import React, {
   createContext,
-  useState,
-  useContext,
   ReactNode,
+  useContext,
   useEffect,
+  useState,
 } from "react";
-import { useRouter } from "next/navigation";
 
 interface AuthContextType {
   isLoggedIn: boolean;

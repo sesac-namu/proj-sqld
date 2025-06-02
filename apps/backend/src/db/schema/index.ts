@@ -1,4 +1,13 @@
-import type { User, UserCreate } from "./users";
+import { accountsTable } from "./accounts";
+import { sessionsTable } from "./sessions";
 import { usersTable } from "./users";
+import { verificationsTable } from "./verifications";
 
-export { usersTable, type User, type UserCreate };
+const schema = {
+  usersTable,
+  sessionsTable,
+  accountsTable,
+  verificationsTable,
+};
+
+export default schema;
