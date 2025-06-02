@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Config from "@/components/config";
 import Header from "@/components/Header"; // Header 컴포넌트 임포트 (경로 별칭 @ 사용)
+import { env } from "@/env";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,7 +30,10 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Config>
+        <Config
+          NEXT_PUBLIC_API_URL={env.NEXT_PUBLIC_API_URL}
+          NEXT_PUBLIC_SITE_URL={env.NEXT_PUBLIC_SITE_URL}
+        >
           <Header />
           <main>{children}</main>
         </Config>
