@@ -132,7 +132,7 @@ async def fetch_question_data(page):
         remove_words = ["오답입니다!!", "정답입니다!!", "[정답]", "[해설]", "문제 계속 풀기"]
         cleaned_text = answer
         for word in remove_words:
-        cleaned_text = cleaned_text.replace(word, '')
+            cleaned_text = cleaned_text.replace(word, '')
             # answer = '\n'.join([answer1.strip(), answer2.strip()])
         # 불필요한 공백 제거
         answer = ' '.join(cleaned_text.split())
