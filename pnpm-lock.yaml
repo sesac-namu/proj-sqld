@@ -61,7 +61,7 @@ importers:
         specifier: latest
         version: 2.11.12(drizzle-orm@0.43.1(@types/pg@8.15.2)(kysely@0.28.2)(pg@8.16.0))
 
-  apps/web:
+  apps/frontend:
     dependencies:
       '@heroicons/react':
         specifier: ^2.2.0
