@@ -8,7 +8,6 @@ import {
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { PropsWithChildren, useState } from "react";
 import { toast } from "sonner";
-import { env } from "@/env";
 
 export default function QueryProvider({ children }: PropsWithChildren) {
   const [queryClient] = useState(

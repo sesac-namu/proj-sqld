@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation"; // 리다이렉션을 위해
 import React, { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext"; // useAuth 훅 임포트
 
-export default function LoginPage() {
+export default function SigninPage() {
   const { login, isLoggedIn } = useAuth();
   const router = useRouter();
 

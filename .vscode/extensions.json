@@ -3,6 +3,7 @@
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
     "biomejs.biome",
-    "charliermarsh.ruff"
+    "charliermarsh.ruff",
+    "bradlc.vscode-tailwindcss"
   ]
 }
