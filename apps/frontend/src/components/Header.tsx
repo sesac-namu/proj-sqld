@@ -104,7 +104,6 @@ export default function Header() {
           </div>
         </nav>
       </header>
-
       {/* 분리된 DrawerNavigation 컴포넌트 사용 */}
       <DrawerNavigation
         isOpen={isDrawerOpen}
