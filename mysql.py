@@ -1,4 +1,7 @@
 import pymysql
+from glob import glob
+import pandas as pd
+from data_process import read_files, drop_dupli
 
 def connect_database():
     try:
@@ -53,5 +56,12 @@ def insert(data_list):
         connection.close()
 
 if __name__ == '__main__':
-    
-    insert(sample_data_list)
+    files = glob('data/*.csv')    
+
+    df = read_files(files)
+    df = drop_dupli(df)
+    print(df.shape)
+    df.to_csv('data/first_df.csv', encoding='utf-8', index=0)
+
+
+    # insert(sample_data_list)
