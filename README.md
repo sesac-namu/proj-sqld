@@ -38,6 +38,17 @@ corepack use pnpm@10.11.0 # pnpm 준비
 pnpm install # 패키지 설치
 ```
 
+#### 데이터베이스 테이블 생성
+
+1. mysql 설치
+2. 계정명 `root`, 비밀번호 `1234`
+3. `sqld` 데이터베이스 생성 (`create database sqld;`)
+4. 테이블 생성 스크립트 실행
+
+```sh
+pnpm run db:migrate
+```
+
 ### 개발 서버 구동
 
 ```sh
@@ -64,5 +75,5 @@ pnpm run {script}
 | `lint` | 프로젝트별 린팅 |
 | `db:generate` | 데이터베이스 마이그레이션 SQL 생성 |
 | `db:migrate` | 데이터베이스 마이그레이션 |
-| `db:push` | 데이터베이스에 스키마 적용 |
+| `db:push` | 데이터베이스에 스키마 푸시(마이그레이션 x) |
 | `db:studio` | 로컬 데이터베이스 스튜디오 |

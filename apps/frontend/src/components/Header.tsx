@@ -4,7 +4,6 @@
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useState } from "react";
-import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import DrawerNavigation from "@/navigations/DrawerNavigation";
 
@@ -34,7 +33,7 @@ export default function Header() {
     { href: "/quiz", label: "문제 목록", type: "link" },
     // { href: '/study-materials', label: '학습 자료', type: 'link' },
     { href: "/mypage", label: "마이페이지", type: "link", requiresAuth: true },
-    { href: "/login", label: "로그인", type: "link", guestOnly: true },
+    { href: "/signin", label: "로그인", type: "link", guestOnly: true },
     { href: "/signup", label: "회원가입", type: "link", guestOnly: true },
     {
       label: "로그아웃",

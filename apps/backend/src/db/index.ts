@@ -1,8 +1,17 @@
-import { drizzle } from "drizzle-orm/node-postgres";
+import { drizzle } from "drizzle-orm/mysql2";
 import { env } from "~/env";
-import schema from "./schema";
+import { account } from "./schema/accounts";
+import { session } from "./schema/sessions";
+import { user } from "./schema/users";
+import { verification } from "./schema/verifications";
 
-export const db = drizzle(env.DATABASE_URL, {
-  schema,
-  casing: "snake_case",
-});
+const schema = {
+  account,
+  session,
+  user,
+  verification,
+};
+
+const db = drizzle(env.DATABASE_URL, {});
+
+export { schema, db };

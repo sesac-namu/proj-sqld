@@ -1,18 +1,18 @@
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { usersTable } from "./users";
+import { mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { user } from "./users";
 
-export const sessionsTable = pgTable("sessions", {
-  id: text().primaryKey(),
-  expiresAt: timestamp().notNull(),
-  token: text().notNull().unique(),
-  createdAt: timestamp().defaultNow().notNull(),
-  updatedAt: timestamp().defaultNow().notNull(),
-  ipAddress: text(),
-  userAgent: text(),
-  userId: text()
+export const session = mysqlTable("session", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  expiresAt: timestamp("expires_at").notNull(),
+  token: varchar("token", { length: 255 }).notNull().unique(),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  userId: varchar("user_id", { length: 36 })
     .notNull()
-    .references(() => usersTable.id, { onDelete: "cascade" }),
+    .references(() => user.id, { onDelete: "cascade" }),
 });
 
-export type Session = typeof sessionsTable.$inferSelect;
-export type SessionCreate = typeof sessionsTable.$inferInsert;
+export type Session = typeof session.$inferSelect;
+export type SessionCreate = typeof session.$inferInsert;
