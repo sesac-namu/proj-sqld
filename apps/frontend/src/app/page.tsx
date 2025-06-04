@@ -1,7 +1,7 @@
 // src/app/page.tsx
 import Link from "next/link";
 
-export default function HomePage() {
+export default async function HomePage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-slate-700 p-24 text-white">
       <div className="text-center">
