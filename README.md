@@ -1,100 +1,52 @@
-# 🤖 sasac to namu
+지금 나는 FBS에서 node.js 설치 및 nvm 설치  
+corepack enable pnpm 까지 
+완료하였다.
 
-- 스터디명: 새싹에서나무까지
-- 조원: 손보람 | 오은택 | 서인영
-- Start Team on May 19, 2025
+그리하여
 
-<br><br>
+pnpm -v 까지 해서 잘 나온다! 
 
-## 📜✏️ Project [AI SQLD CBT]
+밑에 일단 환경설정 참고 좀 하고,
 
-- <종료> ~~1차: To do List 앱 만들기를 통해 Flet 학습하기 (25.05.19 ~ 05.25)~~
-- 2차(본프로젝트): 가벼운 AI오픈소스를 활용한 간단한 앱 협업 제작하기 (25.05.27 ~ 08.26)
-  - SQLD CBT 문제 데이터를 활용하여 CBT 제공 및 무한 문제 만들기
 
-<br><br>
+### 환경 설정
 
-## 🏆 Work Toward a Goal
-
-- [x] Github 협업 구축
-- [x] Branch 구성
-- [ ] 폴더 구조 구성
-- [ ] SQLD CBT 사이트 많이 찾기
-
-<br><br>
-
-## 📊 Progress rate
-
-- 조사 : ██░░░░░░░░ 20%
-- UX/UI: ████████░░ 80%
-- 기능구현: ██░░░░░░░░ 20%
-
-<br><br>
-
-## 📚 Branch Structure
-
-- [main](../main) - 메인 브랜치
-- [dev](../dev) - 최종 테스트 브랜치
-- [feat](../feat) - 기능 구현 브랜치
-- [fix](../fix) - 에러 수정 브랜치
-- issue - issue branch 작업
-
-<br><br>
-
-## 🛑 ⚙︎ Setting Environment
-
-#### react(Next.js) = (통일 후 지정 설치 필요)
-
-#### node.js = (통일 후 지정 설치 필요)
-
-<br><br>
-
-## 📁 Repository Structure
-
-```markdown
-📦 **SQLD CBT Project**  
-┣ 📂 front
-┃ ┣ 📂 src  
-┃ ┃ ┣ 📂 
-┃ ┃ ┣ 📂 componenets
-┃ ┃ ┣ 📂 
-┃ ┃ ┗ 📂 
-┃ ┣ 📄 .gitignore
-┃ ┣ 📄 pyproject.toml
-┃ ┗ 📄 README.md
-┃
-┣ 📂 server
-┃
-┗ 📄 README.md
+```sh
+corepack enable
+corepack use pnpm@10.11.0 # pnpm 준비
+pnpm install # 패키지 설치
 ```
 
-<br><br>
+### 개발 서버 구동
 
-## ➡️ How to 'Git Collaboration Works'
+```sh
+pnpm run dev
+```
 
-- (locked main branch)
-- Create Issue
-  - Organization -> Repository -> Project -> `add item`
-- Create Issue Branch
-  - Organization -> Repository -> Project -> Select item -> Development -> Create a Baranch -> Setting and `Create branch`
-- Check Issue
-  - Organization -> Repository -> Issue
-- Coding for the Issue
-- And `Pull requests` to `'feat' branch`
-- All Team members `CodeReview` on the `Pull requests`
-- It can merge to `'dev' branch` after approved the 'feature code'
-- Repeat the above process
-- Done.
+### 프로젝트 빌드
 
-<br><br>
+```sh
+pnpm run build
+```
 
-## 📝 History
+## 스크립트
 
-### 🟡 일기장
+```sh
+pnpm run {script}
+```
 
-- [우리 팀원의 일기장](https://github.com/sesac-namu/proj-sqld/discussions/2)
+| 이름 | 동작 |
+| ---- | ---------- |
+| `dev` | 개발 서버 구동 |
+| `build` | 프로젝트 빌드 |
+| `format` | 프로젝트별 포매팅 |
+| `lint` | 프로젝트별 린팅 |
+| `db:generate` | 데이터베이스 마이그레이션 SQL 생성 |
+| `db:migrate` | 데이터베이스 마이그레이션 |
+| `db:push` | 데이터베이스에 스키마 적용 |
+| `db:studio` | 로컬 데이터베이스 스튜디오 |
 
-<br><br>
 
-## 🔗 reference
+---
 
+# 🔥 자!! 우리 다시 next.js 부터 다시 설치를 해봅시다!
