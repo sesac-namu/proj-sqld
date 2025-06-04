@@ -12,6 +12,8 @@ const schema = {
   verification,
 };
 
-const db = drizzle(env.DATABASE_URL, {});
+const db = drizzle(env.DATABASE_URL, {
+  casing: "snake_case",
+});
 
 export { schema, db };
