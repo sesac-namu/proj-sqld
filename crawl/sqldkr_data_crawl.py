@@ -61,6 +61,12 @@ class SQLDCrawler:
             # 문제 URL로 이동
             url = f'https://www.sqld.kr/mock-exam/{page_id}/question/{question_idx}?is_review=True'
             await page.goto(url, wait_until='domcontentloaded', timeout=15000)
+
+            # 카테고리
+            category = '1과목' if await page.locator('#content-container > div.main-section-title').inner_text() == '데이터 모델링의 이해' else '2과목'
+
+            # 태그
+            tag = await page.locator('#q-gb-nm').inner_text()
             
             # 문제 제목
             question_title = await page.locator('#content-container > div.question-content').inner_text()
@@ -100,8 +106,10 @@ class SQLDCrawler:
             answer = '\n'.join([answer1.strip(), answer2.strip()])
 
             data = {
-                'id': question_idx + 1,
-                'page_id': page_id,
+                # 'id': question_idx + 1,
+                # 'page_id': page_id,
+                'category': category,
+                'tags': tag,
                 'title': question_title,
                 'content_img': image_url,
                 'content_text': text_part,

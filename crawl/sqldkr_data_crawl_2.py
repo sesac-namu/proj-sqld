@@ -140,6 +140,8 @@ async def fetch_question_data(page):
 
         data = {
             'title': question_title,
+            # 'category': category,
+            # 'tags': tag,
             'content_img': image_url,
             'content_text': text_part,
             'choices_1': choices[0] if len(choices) > 0 else None,
