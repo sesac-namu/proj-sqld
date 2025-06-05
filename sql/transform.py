@@ -17,9 +17,9 @@ with open("data.csv", "r", encoding="utf-8") as f:
         line.append(answer_explanation)
 
         for i in range(len(line)):
-            line[i] = re.sub("'", "\\'", line[i])
-            line[i] = re.sub("‘", "\\'", line[i])
-            line[i] = re.sub("’", "\\'", line[i])
+            line[i] = re.sub("['‘’]", "\\'", line[i])
+            # line[i] = re.sub("‘", "\\'", line[i])
+            # line[i] = re.sub("’", "\\'", line[i])
             line[i] = re.sub("：", ":", line[i])
             line[i] = re.sub("；", ";", line[i])
 
