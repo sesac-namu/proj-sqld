@@ -1,4 +1,4 @@
-import { int, mysqlTable, text } from "drizzle-orm/mysql-core";
+import { boolean, int, mysqlTable, text } from "drizzle-orm/mysql-core";
 
 export const quiz = mysqlTable("quiz", {
   id: int().primaryKey().autoincrement(),
@@ -11,7 +11,8 @@ export const quiz = mysqlTable("quiz", {
   choices2: text("choices_2").notNull(),
   choices3: text("choices_3").notNull(),
   choices4: text("choices_4").notNull(),
-  answer: text().notNull(),
+  multiple: boolean().notNull().default(false),
+  answer_explanation: text().notNull().default(""),
 });
 
 export type Quiz = typeof quiz.$inferSelect;

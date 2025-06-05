@@ -56,7 +56,13 @@ erDiagram
     TEXT choices_2
     TEXT choices_3
     TEXT choices_3
-    TEXT answer
+    BOOLEAN multiple
+    TEXT answer_explanation
+  }
+  quiz ||--|{ quiz_answer : "has"
+  quiz_answer {
+    INTEGER quiz_id FK,PK "quiz.id"
+    INTEGER answer PK
   }
   user ||--o{ test : "has"
   test {
@@ -64,7 +70,7 @@ erDiagram
     INTEGER score PK
     DATETIME created_at
     DATETIME finished_at
-    VARCHAR(36) user_id FK "users.id"
+    VARCHAR(36) user_id FK "user.id"
   }
   test ||--|{ test_quiz : "has"
   quiz ||--o{ test_quiz : "has"
