@@ -8,27 +8,49 @@ with open("data.csv", "r", encoding="utf-8") as f:
 
     data_reader.__next__()  # Skip the header row
 
-    i = 0
     for row in data_reader:
-        lines.append(row)
-        i += 1
+        line = row[:-1]
+        answer = row[-1].split("\n")
+        answer_number = answer[0].split(": ")[1]
+        answer_explanation = answer[1] if len(answer) > 1 else ""
+        line.append(answer_number)
+        line.append(answer_explanation)
 
-        if i == 10:
-            break
+        for i in range(len(line)):
+            line[i] = re.sub("'", "\\'", line[i])
+            line[i] = re.sub("‘", "\\'", line[i])
+            line[i] = re.sub("’", "\\'", line[i])
+            line[i] = re.sub("：", ":", line[i])
+            line[i] = re.sub("；", ";", line[i])
+
+        lines.append(line)
 
 with open("data.sql", "w", encoding="utf-8") as f:
-    sql = "USE quiz;\n\ninsert into quiz (id, category, tags, title, content_img, content_text, choices1, choices2, choices3, choices4, answer, answer_explanation) values\n"
+    quiz_sql = "USE sqld;\n\ninsert into quiz (id, category, tags, title, content_img, content_text, choices_1, choices_2, choices_3, choices_4, multiple, answer_explanation) values\n"
+    quiz_answer_sql = "insert into quiz_answer (quiz_id, answer) values\n"
 
     id = 0
 
     for i in range(len(lines)):
         line = lines[i]
-        answer = line[-1]
+        answer = list(map(int, line[-2].split(",")))
 
         id += 1
-        sql += f"({id}, {(line[0][0])}, '{line[1]}', '{line[2]}', '{line[3]}', '{line[4]}', '{line[5]}', '{line[6]}', '{line[7]}', '{line[8]}', '{line[9]}')"
+        quiz_sql += f"({id}, {(line[0][0])}, '{line[1]}', '{line[2]}', '{line[3]}', '{line[4]}', '{line[5]}', '{line[6]}', '{line[7]}', '{line[8]}', {'TRUE' if len(answer) != 1 else 'FALSE'}, '{line[10]}')"
+
+        for a in answer:
+            quiz_answer_sql += f"({id}, {a})"
+
+            if a != answer[-1]:
+                quiz_answer_sql += ",\n"
 
         if i < len(lines) - 1:
-            sql += ",\n"
+            quiz_sql += ",\n"
+            quiz_answer_sql += ",\n"
 
-    print(sql)
+    quiz_sql += ";\n\n"
+    quiz_answer_sql += ";\n"
+
+    sql = quiz_sql + quiz_answer_sql
+
+    f.write(sql)
