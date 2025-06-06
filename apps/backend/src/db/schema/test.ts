@@ -3,16 +3,16 @@ import { datetime, int, mysqlTable, varchar } from "drizzle-orm/mysql-core";
 import { user } from "./users";
 
 export const test = mysqlTable("test", {
-  id: int().primaryKey().autoincrement(),
-  score: int(),
-  createdAt: datetime()
+  id: int("id").primaryKey().autoincrement(),
+  score: int("score"),
+  createdAt: datetime("created_at")
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull(),
-  updatedAt: datetime()
+  updatedAt: datetime("updated_at")
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull(),
-  finishedAt: datetime(),
-  userId: varchar({ length: 36 })
+  finishedAt: datetime("finished_at"),
+  userId: varchar("user_id", { length: 36 })
     .notNull()
     .references(() => user.id, {
       onDelete: "cascade",
