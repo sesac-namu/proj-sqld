@@ -34,7 +34,7 @@ CREATE TABLE `quiz` (
 CREATE TABLE `quiz_answer` (
 	`quiz_id` int NOT NULL,
 	`answer` int NOT NULL,
-	CONSTRAINT `quiz_answer_quiz_id` PRIMARY KEY(`quiz_id`)
+	CONSTRAINT `quiz_answer_quiz_id_answer_pk` PRIMARY KEY(`quiz_id`,`answer`)
 );
 --> statement-breakpoint
 CREATE TABLE `session` (
@@ -55,7 +55,7 @@ CREATE TABLE `test_quiz` (
 	`quiz_id` int NOT NULL,
 	`user_choice` int,
 	`solved_at` datetime,
-	CONSTRAINT `test_quiz_test_id` PRIMARY KEY(`test_id`)
+	CONSTRAINT `test_quiz_test_id_quiz_id_pk` PRIMARY KEY(`test_id`,`quiz_id`)
 );
 --> statement-breakpoint
 CREATE TABLE `test` (

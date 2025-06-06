@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "c8e489f8-6459-4baf-a694-e6b174fd7604",
+  "id": "03c0ba70-439e-450b-a510-0e02aa1cc99a",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "account": {
@@ -264,15 +264,10 @@
         }
       },
       "compositePrimaryKeys": {
-        "quiz_answer_quiz_id": {
-          "name": "quiz_answer_quiz_id",
+        "quiz_answer_quiz_id_answer_pk": {
+          "name": "quiz_answer_quiz_id_answer_pk",
           "columns": [
-            "quiz_id"
-          ]
-        },
-        "quiz_answer_answer": {
-          "name": "quiz_answer_answer",
-          "columns": [
+            "quiz_id",
             "answer"
           ]
         }
@@ -436,15 +431,10 @@
         }
       },
       "compositePrimaryKeys": {
-        "test_quiz_test_id": {
-          "name": "test_quiz_test_id",
+        "test_quiz_test_id_quiz_id_pk": {
+          "name": "test_quiz_test_id_quiz_id_pk",
           "columns": [
-            "test_id"
-          ]
-        },
-        "test_quiz_quiz_id": {
-          "name": "test_quiz_quiz_id",
-          "columns": [
+            "test_id",
             "quiz_id"
           ]
         }
