@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "5",
-      "when": 1748996044194,
-      "tag": "0000_late_lady_deathstrike",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1749031698302,
-      "tag": "0001_classy_blockbuster",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "5",
-      "when": 1749090538015,
-      "tag": "0002_dapper_jamie_braddock",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "5",
-      "when": 1749213891926,
-      "tag": "0003_secret_champions",
+      "when": 1749214277372,
+      "tag": "0000_gifted_maria_hill",
       "breakpoints": true
     }
   ]
