@@ -149,8 +149,7 @@ insert into quiz (id, category, tags, title, content_img, content_text, choices_
 (146, 2, '계층형 질의', '다음의 계층형 질의에서 리프 노드 여부를 출력하려고 한다. ( )에 올바른 것은?', '', 'SELECT LEVEL, LPAD(\' \',4 + (LEVEL -1) )|| EMPNO, MGR, ( ) AS ISLEAF FROM Mytest START WITH MGR IS NULL CONNECT BY PRIOR EMPNO = MGR;', 'CONNECT_BY_LEAF', 'SYS_CONNECT_BY_PATH', 'CONNECT_BY_ISCYCLE', 'CONNECT_BY_ISLEAF', FALSE, '해설: -CONNECT_BY_ISLEAF : 전개 과정에서 해당 데이터가 리프 데이터면 1, 아니면 0을 반환한다. -CONNECT_BY_ISCYCLE : 전개 과정에서 자식을 갖는데, 해당 데이터가 조상으로 존재하면1, 그렇지 않으면 0을 반환한다. 여기서 조상이란 자신으로부터 루트까지의 경로에 존재하는 데이터를 말한다. -SYS_CONNECT_BY_PATH : 하위 레벨의 칼럼까지 모두 표시해준다.'),
 (147, 2, 'DDL', '다음 중 DDL 문이 아닌 것은?', '', '', 'ALTER', 'COMMIT', 'RENAME', 'CREATE TABLE', FALSE, '해설: COMMIT 과 ROLLBACK문은 TCL이고 DDL에는 CREATE, ALTER, DROP, RENAME 등이 있다.'),
 (148, 2, 'JOIN', '다음 출력 결과를 얻기 위한 SQL 문장으로 가장 적절한 것은?', 'https://sqld-bk.s3.ap-southeast-2.amazonaws.com/j794-1.png', '', 'SELECT E1.EMPNO, E1.ENAME, E2.ENAME AS MANAGER_NAME FROM EMP E1, EMP E2 WHERE E1.EMPNO = E2.MGR(+) ORDER BY E1.EMPNO;', 'SELECT E1.EMPNO, E1.ENAME, E2.ENAME AS MANAGER_NAME FROM EMP E1, EMP E2 WHERE E1.EMPNO = E2.MGR ORDER BY E1.EMPNO;', 'SELECT E1.EMPNO, E1.ENAME, E2.ENAME AS MANAGER_NAME FROM EMP E1, EMP E2 WHERE E1.MGR = E2.EMPNO(+) ORDER BY E1.EMPNO;', 'SELECT E1.EMPNO, E1.ENAME, E2.ENAME AS MANAGER_NAME FROM EMP E1, EMP E2 WHERE E1.MGR = E2.EMPNO ORDER BY E1.EMPNO;', FALSE, '해설: SELECT절을 보면 E2.ENAME이 매니저이름이다. 따라서 E1의 MGR(매니저번호)을 갖는 E2에서의 EMPNO가 E1 사 원의 매니저라고 볼 수 있다. 또한, 매니저가 없는 MARTIN도 출력을 하기 위해서는 LEFT OUTER JOIN이 필요하므 로 오라클 표준으로 E1의 반대쪽 컬럼에 (+) 기호를 붙여주면 된다.'),
-(149, 2, '윈도우 함수', '아래와 같은 결과가 나오도록 (ㄱ)에 알맞은 SQL문을 완성하시오.', 'https://sqld-bk.s3.ap-southeast-2.amazonaws.com/j460-1.png', 'SELECT 회원ID, DENSE_RANK() OVER(ORDER BY (ㄱ) ) AS RANK, 주문금액 FROM SQLD7;', '주문금액 1', '주문금액 ASC', '(주문금액)', '(주문금액) DESC', FALSE, '해설: 결과 테이블은 주문금액이 큰 순서대로 순위를 부여하는 테이블로 주문금액 속성을 내림차순 정렬했을 때의 순위이고 같은 등수 다음에는 바로 다음 등수가 부여되었으므로 DENSE 랭크 함수가 들어가야 한다.'),
-(150, c, 'tags', 'title', 'content_img', 'content_text', 'choices_1', 'choices_2', 'choices_3', 'choices_4', FALSE, '데이터 무결성');
+(149, 2, '윈도우 함수', '아래와 같은 결과가 나오도록 (ㄱ)에 알맞은 SQL문을 완성하시오.', 'https://sqld-bk.s3.ap-southeast-2.amazonaws.com/j460-1.png', 'SELECT 회원ID, DENSE_RANK() OVER(ORDER BY (ㄱ) ) AS RANK, 주문금액 FROM SQLD7;', '주문금액 1', '주문금액 ASC', '(주문금액)', '(주문금액) DESC', FALSE, '해설: 결과 테이블은 주문금액이 큰 순서대로 순위를 부여하는 테이블로 주문금액 속성을 내림차순 정렬했을 때의 순위이고 같은 등수 다음에는 바로 다음 등수가 부여되었으므로 DENSE 랭크 함수가 들어가야 한다.');
 
 insert into quiz_answer (quiz_id, answer) values
 (1, 3),
@@ -304,5 +303,4 @@ insert into quiz_answer (quiz_id, answer) values
 (146, 2),
 (147, 2),
 (148, 3),
-(149, 4),
-(150, 4);
+(149, 4);
