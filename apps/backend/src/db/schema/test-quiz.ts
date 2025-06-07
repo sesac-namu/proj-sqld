@@ -15,6 +15,7 @@ export const testQuiz = mysqlTable(
       .references(() => quiz.id, {
         onDelete: "cascade",
       }),
+    quizNumber: int("quiz_number"),
     userChoice: int("user_choice"),
     solvedAt: datetime("solved_at"),
   },
