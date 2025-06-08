@@ -50,14 +50,6 @@ CREATE TABLE `session` (
 	CONSTRAINT `session_token_unique` UNIQUE(`token`)
 );
 --> statement-breakpoint
-CREATE TABLE `test_quiz` (
-	`test_id` int NOT NULL,
-	`quiz_id` int NOT NULL,
-	`user_choice` int,
-	`solved_at` datetime,
-	CONSTRAINT `test_quiz_test_id_quiz_id_pk` PRIMARY KEY(`test_id`,`quiz_id`)
-);
---> statement-breakpoint
 CREATE TABLE `test` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`score` int,
@@ -66,6 +58,21 @@ CREATE TABLE `test` (
 	`finished_at` datetime,
 	`user_id` varchar(36) NOT NULL,
 	CONSTRAINT `test_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `test_quiz` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`test_id` int NOT NULL,
+	`quiz_id` int NOT NULL,
+	`quiz_number` int,
+	`solved_at` datetime,
+	CONSTRAINT `test_quiz_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `test_quiz_answer` (
+	`test_quiz_id` int NOT NULL,
+	`user_choice` int NOT NULL,
+	CONSTRAINT `test_quiz_answer_test_quiz_id_user_choice_pk` PRIMARY KEY(`test_quiz_id`,`user_choice`)
 );
 --> statement-breakpoint
 CREATE TABLE `user` (
@@ -93,6 +100,7 @@ CREATE TABLE `verification` (
 ALTER TABLE `account` ADD CONSTRAINT `account_user_id_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `quiz_answer` ADD CONSTRAINT `quiz_answer_quiz_id_quiz_id_fk` FOREIGN KEY (`quiz_id`) REFERENCES `quiz`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `session` ADD CONSTRAINT `session_user_id_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `test` ADD CONSTRAINT `test_user_id_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `test_quiz` ADD CONSTRAINT `test_quiz_test_id_test_id_fk` FOREIGN KEY (`test_id`) REFERENCES `test`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `test_quiz` ADD CONSTRAINT `test_quiz_quiz_id_quiz_id_fk` FOREIGN KEY (`quiz_id`) REFERENCES `quiz`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `test` ADD CONSTRAINT `test_user_id_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE cascade ON UPDATE no action;
+ALTER TABLE `test_quiz_answer` ADD CONSTRAINT `test_quiz_answer_test_quiz_id_test_quiz_id_fk` FOREIGN KEY (`test_quiz_id`) REFERENCES `test_quiz`(`id`) ON DELETE no action ON UPDATE no action;

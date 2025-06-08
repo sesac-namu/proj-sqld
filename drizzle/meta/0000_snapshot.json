@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "03c0ba70-439e-450b-a510-0e02aa1cc99a",
+  "id": "294accbd-b7eb-4f36-b994-500871ed01e3",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "account": {
@@ -369,79 +369,6 @@
       },
       "checkConstraint": {}
     },
-    "test_quiz": {
-      "name": "test_quiz",
-      "columns": {
-        "test_id": {
-          "name": "test_id",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "quiz_id": {
-          "name": "quiz_id",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "user_choice": {
-          "name": "user_choice",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "solved_at": {
-          "name": "solved_at",
-          "type": "datetime",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "test_quiz_test_id_test_id_fk": {
-          "name": "test_quiz_test_id_test_id_fk",
-          "tableFrom": "test_quiz",
-          "tableTo": "test",
-          "columnsFrom": [
-            "test_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "test_quiz_quiz_id_quiz_id_fk": {
-          "name": "test_quiz_quiz_id_quiz_id_fk",
-          "tableFrom": "test_quiz",
-          "tableTo": "quiz",
-          "columnsFrom": [
-            "quiz_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "test_quiz_test_id_quiz_id_pk": {
-          "name": "test_quiz_test_id_quiz_id_pk",
-          "columns": [
-            "test_id",
-            "quiz_id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraint": {}
-    },
     "test": {
       "name": "test",
       "columns": {
@@ -511,6 +438,131 @@
           "name": "test_id",
           "columns": [
             "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "test_quiz": {
+      "name": "test_quiz",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "test_id": {
+          "name": "test_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "quiz_id": {
+          "name": "quiz_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "quiz_number": {
+          "name": "quiz_number",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "solved_at": {
+          "name": "solved_at",
+          "type": "datetime",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "test_quiz_test_id_test_id_fk": {
+          "name": "test_quiz_test_id_test_id_fk",
+          "tableFrom": "test_quiz",
+          "tableTo": "test",
+          "columnsFrom": [
+            "test_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "test_quiz_quiz_id_quiz_id_fk": {
+          "name": "test_quiz_quiz_id_quiz_id_fk",
+          "tableFrom": "test_quiz",
+          "tableTo": "quiz",
+          "columnsFrom": [
+            "quiz_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "test_quiz_id": {
+          "name": "test_quiz_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "test_quiz_answer": {
+      "name": "test_quiz_answer",
+      "columns": {
+        "test_quiz_id": {
+          "name": "test_quiz_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_choice": {
+          "name": "user_choice",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "test_quiz_answer_test_quiz_id_test_quiz_id_fk": {
+          "name": "test_quiz_answer_test_quiz_id_test_quiz_id_fk",
+          "tableFrom": "test_quiz_answer",
+          "tableTo": "test_quiz",
+          "columnsFrom": [
+            "test_quiz_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "test_quiz_answer_test_quiz_id_user_choice_pk": {
+          "name": "test_quiz_answer_test_quiz_id_user_choice_pk",
+          "columns": [
+            "test_quiz_id",
+            "user_choice"
           ]
         }
       },
