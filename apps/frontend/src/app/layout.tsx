@@ -4,6 +4,7 @@ import "./globals.css";
 import Config from "@/components/config";
 import Header from "@/components/Header"; // Header 컴포넌트 임포트 (경로 별칭 @ 사용)
 import { env } from "@/env";
+import { authClient } from "@/lib/auth-client";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

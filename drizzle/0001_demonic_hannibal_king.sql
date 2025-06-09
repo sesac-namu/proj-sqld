@@ -1,1 +1,0 @@
-ALTER TABLE `test_quiz` ADD `quiz_number` int;

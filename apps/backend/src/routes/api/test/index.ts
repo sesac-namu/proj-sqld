@@ -1,17 +1,16 @@
 import { eq } from "drizzle-orm";
 import { db } from "~/db";
-import { user } from "~/db/schema/users";
+import { test } from "~/db/schema";
 
 export default defineEventHandler({
   onRequest: [requireAuth],
   handler: async (event) => {
-    const result = await db
-      .select()
-      .from(user)
-      .where(eq(user.id, event.context.auth.user.id));
+    const userId = event.context.auth.user.id;
+
+    const res = await db.select().from(test).where(eq(test.userId, userId));
 
     return {
-      data: result[0],
+      data: res,
     };
   },
 });

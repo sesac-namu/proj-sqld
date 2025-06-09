@@ -2,9 +2,11 @@
 "use client";
 
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { Session } from "better-auth/types";
 import Link from "next/link";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { authClient } from "@/lib/auth-client";
 import DrawerNavigation from "@/navigations/DrawerNavigation";
 
 interface NavLinkItem {
@@ -16,21 +18,27 @@ interface NavLinkItem {
   guestOnly?: boolean; // 비로그인 시에만 보일 링크
 }
 
+type HeaderProps = {
+  session: Session | null;
+};
+
 export default function Header() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const { isLoggedIn, logout, user } = useAuth(); // user 정보도 가져올 수 있음
+  const auth = authClient.useSession();
+
+  const isLoggedIn = !!auth.data;
 
   const toggleDrawer = () => {
     setIsDrawerOpen(!isDrawerOpen);
   };
 
   const handleLogout = () => {
-    logout();
+    authClient.signOut();
     if (isDrawerOpen) toggleDrawer(); // Drawer가 열려있으면 닫기
   };
 
   const allNavLinks: NavLinkItem[] = [
-    { href: "/quiz", label: "문제 목록", type: "link" },
+    { href: "/quiz", label: "문제 목록", type: "link", requiresAuth: true },
     // { href: '/study-materials', label: '학습 자료', type: 'link' },
     { href: "/mypage", label: "마이페이지", type: "link", requiresAuth: true },
     { href: "/signin", label: "로그인", type: "link", guestOnly: true },
@@ -61,7 +69,8 @@ export default function Header() {
             href="/"
             className="text-2xl font-bold tracking-tight transition-colors hover:text-blue-400"
           >
-            SQLD CBT {isLoggedIn && user ? `(${user.username}님)` : ""}
+            SQLD CBT{" "}
+            {isLoggedIn && auth.data?.user ? `(${auth.data.user.name}님)` : ""}
           </Link>
 
           {/* 데스크톱 네비게이션 */}
