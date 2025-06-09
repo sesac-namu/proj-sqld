@@ -6,7 +6,7 @@ import { testQuiz } from "~/db/schema/test-quiz";
 import { testQuizChoice } from "~/db/schema/test-quiz-choice";
 
 export default defineEventHandler({
-  // onRequest: [requireAuth],
+  onRequest: [requireAuth],
   handler: async (event) => {
     const testId = Number.parseInt(getRouterParam(event, "testId"));
     const quizNumber = Number.parseInt(getRouterParam(event, "quizNumber"));
@@ -31,6 +31,14 @@ export default defineEventHandler({
         status: 404,
         statusMessage: "Test Quiz not found",
         message: "The requested test quiz does not exist.",
+      });
+    }
+
+    if (testQuizRes[0].solvedAt === null) {
+      throw createError({
+        status: 400,
+        statusMessage: "Quiz not solved",
+        message: "You cannot view results of a quiz that is not solved.",
       });
     }
 

@@ -3,7 +3,7 @@ import { db } from "~/db";
 import { quiz, quizAnswer, test, testQuiz, testQuizChoice } from "~/db/schema";
 
 export default defineEventHandler({
-  // onRequest: [requireAuth],
+  onRequest: [requireAuth],
   handler: async (event) => {
     const testId = Number.parseInt(getRouterParam(event, "testId"));
 
@@ -27,6 +27,14 @@ export default defineEventHandler({
 
     const currentTest = testRes[0];
 
+    if (currentTest.finishedAt === null) {
+      throw createError({
+        status: 400,
+        statusMessage: "Test not finished",
+        message: "You cannot view results of a test that is not finished.",
+      });
+    }
+
     const tq = db
       .select({
         testQuizId: testQuiz.id,
@@ -47,7 +55,7 @@ export default defineEventHandler({
       .from(quizAnswer)
       .where(
         inArray(
-          quiz.id,
+          quizAnswer.quizId,
           quizList.map((v) => v.quiz.id),
         ),
       );

@@ -3,7 +3,7 @@ import { db } from "~/db";
 import { quiz, quizAnswer, test, testQuiz, testQuizChoice } from "~/db/schema";
 
 export default defineEventHandler({
-  // "onRequest": [requireAuth],
+  onRequest: [requireAuth],
   handler: async (event) => {
     const testId = Number.parseInt(getRouterParam(event, "testId"));
 
@@ -23,11 +23,11 @@ export default defineEventHandler({
       .where(and(eq(testQuiz.testId, testId), eq(testQuiz.solvedAt, null)));
 
     if (notFinishedList.length !== 0) {
-      // throw createError({
-      //   status: 400,
-      //   statusMessage: "Test in progress",
-      //   message: "You cannot finish the test while there are unsolved quizzes.",
-      // });
+      throw createError({
+        status: 400,
+        statusMessage: "Test in progress",
+        message: "You cannot finish the test while there are unsolved quizzes.",
+      });
     }
 
     const testQuizList = db

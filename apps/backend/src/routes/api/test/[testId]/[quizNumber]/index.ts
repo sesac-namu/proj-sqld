@@ -5,7 +5,7 @@ import { testQuiz } from "~/db/schema/test-quiz";
 import { testQuizChoice } from "~/db/schema/test-quiz-choice";
 
 export default defineEventHandler({
-  // onRequest: [requireAuth],
+  onRequest: [requireAuth],
   handler: async (event) => {
     const testId = Number.parseInt(getRouterParam(event, "testId"));
     const quizNumber = Number.parseInt(getRouterParam(event, "quizNumber"));
