@@ -38,3 +38,9 @@ yarn-error.log*
 *.pem
 
 .env
+
+# nixOS 환경 설정 폴더 추가
+.idx/
+
+# nixOS MySQL 설치 폴더 추가
+.data/
