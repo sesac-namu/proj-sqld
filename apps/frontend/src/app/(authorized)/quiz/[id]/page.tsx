@@ -51,6 +51,7 @@ export default function QuizPage() {
       }
 
       // 3. 각 퀴즈 상세 정보 가져오기 (첫 번째 문제만 먼저)
+      // ❌ 불러오는 방식이 잘 못 되었습니다.
       const firstQuiz = await quizApi.getById(
         testId,
         quizList[0].quizNumber || 1,
