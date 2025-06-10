@@ -1,7 +1,16 @@
-// hooks/useApi.ts
-
 import { useCallback, useState } from "react";
-import { apiErrorHandler, quizApi, testApi, userApi } from "@/lib/api";
+import {
+  apiErrorHandler,
+  Quiz,
+  quizApi,
+  QuizListItem,
+  QuizResult,
+  Test,
+  testApi,
+  TestResult,
+  User,
+  userApi,
+} from "@/lib/api";
 
 function useApiState<T>() {
   const [data, setData] = useState<T | null>(null);
@@ -34,7 +43,7 @@ function useApiState<T>() {
 }
 
 export function useUser() {
-  const { data: user, loading, error, execute } = useApiState();
+  const { data: user, loading, error, execute } = useApiState<User>();
 
   const fetchUser = useCallback(async () => {
     return execute(() => userApi.getMe());
@@ -44,55 +53,125 @@ export function useUser() {
 }
 
 export function useTestList() {
-  const { data: tests, loading, error, execute } = useApiState();
+  const { data: tests, loading, error, execute } = useApiState<Test[]>();
 
   const fetchTests = useCallback(async () => {
     return execute(() => testApi.getList());
   }, [execute]);
 
   const createTest = useCallback(async () => {
-    const newTest = await execute(() => testApi.create());
+    const newTest = await testApi.create();
 
     await fetchTests();
     return newTest;
-  }, [execute, fetchTests]);
+  }, [fetchTests]);
 
   return { tests, loading, error, fetchTests, createTest };
 }
 
 export function useTest(testId: string) {
-  const { data: test, loading, error, execute } = useApiState();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [test, setTest] = useState<Test | null>(null);
+  const [isFinished, setIsFinished] = useState<{ isFinished: boolean } | null>(
+    null,
+  );
+  const [quizList, setQuizList] = useState<QuizListItem[] | null>(null);
+  const [testResult, setTestResult] = useState<TestResult | null>(null);
 
   const fetchTest = useCallback(async () => {
     if (!testId) return;
-    return execute(() => testApi.getById(testId));
-  }, [testId, execute]);
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await testApi.getById(testId);
+      setTest(result);
+      return result;
+    } catch (err) {
+      const errorMessage = apiErrorHandler.getErrorMessage(err);
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [testId]);
 
   const checkFinished = useCallback(async () => {
     if (!testId) return;
-    return execute(() => testApi.isFinished(testId));
-  }, [testId, execute]);
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await testApi.isFinished(testId);
+      setIsFinished(result);
+      return result;
+    } catch (err) {
+      const errorMessage = apiErrorHandler.getErrorMessage(err);
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [testId]);
 
   const getQuizList = useCallback(async () => {
     if (!testId) return;
-    return execute(() => testApi.getQuizList(testId));
-  }, [testId, execute]);
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await testApi.getQuizList(testId);
+      setQuizList(result);
+      return result;
+    } catch (err) {
+      const errorMessage = apiErrorHandler.getErrorMessage(err);
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [testId]);
 
   const getResult = useCallback(async () => {
     if (!testId) return;
-    return execute(() => testApi.getResult(testId));
-  }, [testId, execute]);
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await testApi.getResult(testId);
+      setTestResult(result);
+      return result;
+    } catch (err) {
+      const errorMessage = apiErrorHandler.getErrorMessage(err);
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [testId]);
 
   const finishTest = useCallback(
-    async (data?: any) => {
+    async (data?: Record<string, unknown>) => {
       if (!testId) return;
-      return execute(() => testApi.finish(testId, data));
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await testApi.finish(testId, data);
+        return result;
+      } catch (err) {
+        const errorMessage = apiErrorHandler.getErrorMessage(err);
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
     },
-    [testId, execute],
+    [testId],
   );
 
   return {
     test,
+    isFinished,
+    quizList,
+    testResult,
     loading,
     error,
     fetchTest,
@@ -104,13 +183,29 @@ export function useTest(testId: string) {
 }
 
 export function useQuiz(testId: string, quizNumber: number) {
-  const { data: quiz, loading, error, execute } = useApiState();
+  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
 
   const fetchQuiz = useCallback(async () => {
     if (!testId || !quizNumber) return;
-    return execute(() => quizApi.getById(testId, quizNumber));
-  }, [testId, quizNumber, execute]);
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await quizApi.getById(testId, quizNumber);
+      setQuiz(result);
+      return result;
+    } catch (err) {
+      const errorMessage = apiErrorHandler.getErrorMessage(err);
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [testId, quizNumber]);
 
   const submitAnswer = useCallback(
     async (answer: string) => {
@@ -132,11 +227,24 @@ export function useQuiz(testId: string, quizNumber: number) {
 
   const getResult = useCallback(async () => {
     if (!testId || !quizNumber) return;
-    return execute(() => quizApi.getResult(testId, quizNumber));
-  }, [testId, quizNumber, execute]);
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await quizApi.getResult(testId, quizNumber);
+      setQuizResult(result);
+      return result;
+    } catch (err) {
+      const errorMessage = apiErrorHandler.getErrorMessage(err);
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [testId, quizNumber]);
 
   return {
     quiz,
+    quizResult,
     loading,
     error,
     submitting,
@@ -149,7 +257,7 @@ export function useQuiz(testId: string, quizNumber: number) {
 export function useApiCall() {
   const [loading, setLoading] = useState(false);
 
-  const call = useCallback(async (apiCall: () => Promise<any>) => {
+  const call = useCallback(async (apiCall: () => Promise<unknown>) => {
     setLoading(true);
     try {
       const result = await apiCall();

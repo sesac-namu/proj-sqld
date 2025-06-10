@@ -1,18 +1,8 @@
-// app/(authorized)/quiz/page.tsx
 "use client";
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { apiErrorHandler, testApi } from "@/lib/api";
-
-interface Test {
-  id: string;
-  title?: string;
-  description?: string;
-  totalQuestions?: number;
-  isFinished: boolean;
-  createdAt: string;
-}
+import { apiErrorHandler, Test, testApi } from "@/lib/api";
 
 export default function QuizListPage() {
   const [tests, setTests] = useState<Test[]>([]);
@@ -20,35 +10,31 @@ export default function QuizListPage() {
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
 
-  // 테스트 목록 가져오기 (useCallback으로 메모이제이션)
   const fetchTests = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const data = await testApi.getList();
 
-      // 🔥 데이터 구조 디버깅 - 실제 받은 데이터 확인
       console.log("받은 데이터:", data);
       console.log("데이터 타입:", typeof data);
       console.log("배열인가?:", Array.isArray(data));
 
-      // 🔥 안전하게 배열로 변환
       let testsArray: Test[] = [];
 
       if (Array.isArray(data)) {
-        // 데이터가 배열인 경우
         testsArray = data;
       } else if (data && typeof data === "object") {
-        // 데이터가 객체인 경우 (예: { tests: [...] } 형태)
-        if (data.tests && Array.isArray(data.tests)) {
-          testsArray = data.tests;
-        } else if (data.data && Array.isArray(data.data)) {
-          testsArray = data.data;
+        const dataObj = data as Record<string, unknown>;
+        if (dataObj.tests && Array.isArray(dataObj.tests)) {
+          testsArray = dataObj.tests as Test[];
+        } else if (dataObj.data && Array.isArray(dataObj.data)) {
+          testsArray = dataObj.data as Test[];
         } else {
-          // 객체를 배열로 변환 시도
-          testsArray = Object.values(data).filter(
-            (item) => item && typeof item === "object" && "id" in item,
-          ) as Test[];
+          testsArray = Object.values(dataObj).filter(
+            (item): item is Test =>
+              item != null && typeof item === "object" && "id" in item,
+          );
         }
       }
 
@@ -63,14 +49,13 @@ export default function QuizListPage() {
     }
   }, []);
 
-  // 새 테스트 생성
   const createNewTest = async () => {
     setCreating(true);
     try {
       const newTestData = await testApi.create();
       console.log("생성된 테스트:", newTestData);
       alert("새 테스트가 생성되었습니다!");
-      // 목록 새로고침
+
       await fetchTests();
     } catch (err) {
       apiErrorHandler.showError(err);
@@ -80,12 +65,10 @@ export default function QuizListPage() {
     }
   };
 
-  // 컴포넌트 마운트 시 데이터 로드
   useEffect(() => {
     fetchTests();
   }, [fetchTests]);
 
-  // 로딩 상태
   if (loading) {
     return (
       <div className="flex min-h-96 items-center justify-center">
@@ -96,7 +79,6 @@ export default function QuizListPage() {
     );
   }
 
-  // 에러 상태
   if (error) {
     return (
       <div className="flex min-h-96 flex-col items-center justify-center">
@@ -124,18 +106,6 @@ export default function QuizListPage() {
           {creating ? "생성 중..." : "새 테스트 시작"}
         </button>
       </div>
-
-      {/* 🔥 디버깅 정보 표시 (개발 중에만) */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="mx-10 mb-4 rounded bg-gray-100 p-4 text-sm">
-          <div>
-            <strong>디버깅 정보:</strong>
-          </div>
-          <div>tests 타입: {typeof tests}</div>
-          <div>tests 길이: {Array.isArray(tests) ? tests.length : "N/A"}</div>
-          <div>배열 여부: {Array.isArray(tests) ? "Yes" : "No"}</div>
-        </div>
-      )}
 
       {/* 테스트 목록 */}
       <div className="grid gap-6 p-7 md:grid-cols-2 lg:grid-cols-3">
@@ -195,7 +165,6 @@ export default function QuizListPage() {
             </div>
           ))
         ) : (
-          // 🔥 안전한 빈 상태 처리
           <div className="col-span-full py-12 text-center">
             <p className="mb-4 text-slate-500">
               {Array.isArray(tests)

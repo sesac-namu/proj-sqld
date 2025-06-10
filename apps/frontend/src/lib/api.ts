@@ -1,6 +1,78 @@
-// lib/api.ts
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+}
 
-async function apiCall(url: string, options: RequestInit = {}) {
+export interface Test {
+  id: string;
+  title?: string;
+  description?: string;
+  totalQuestions?: number;
+  createdAt: string;
+  isFinished: boolean;
+}
+
+export interface QuizListItem {
+  id: number;
+  testId: number;
+  quizId: number;
+  quizNumber: number;
+  solvedAt: string | null;
+  solved: boolean;
+  userChoices: unknown[];
+}
+
+export interface QuizDetail {
+  quizId: number;
+  solvedAt: string | null;
+  category: number;
+  tags: string;
+  title: string;
+  contentImg: string;
+  contentText: string;
+  choices1: string;
+  choices2: string;
+  choices3: string;
+  choices4: string;
+  multiple: boolean;
+}
+
+export interface Quiz {
+  id: number;
+  quizNumber: number;
+  question: string;
+  options?: string[];
+  questionType: string;
+  difficulty?: string;
+  category?: number;
+  multiple?: boolean;
+  tags?: string;
+}
+
+export interface QuizResult {
+  isCorrect: boolean;
+  correctAnswer: string;
+  userAnswer: string;
+  explanation?: string;
+}
+
+export interface TestResult {
+  testId: string;
+  totalQuestions: number;
+  correctAnswers: number;
+  score: number;
+  percentage: number;
+  quizResults: QuizResult[];
+}
+
+export interface ApiResponse<T> {
+  data: T;
+  message?: string;
+  success?: boolean;
+}
+
+async function apiCall<T>(url: string, options: RequestInit = {}): Promise<T> {
   try {
     console.log(`🚀 API 호출: ${options.method || "GET"} ${url}`);
 
@@ -20,7 +92,7 @@ async function apiCall(url: string, options: RequestInit = {}) {
         const errorBody = await response.text();
         console.log("❌ 에러 응답 내용:", errorBody);
         errorDetails = errorBody;
-      } catch (e) {
+      } catch {
         console.log("❌ 에러 응답을 읽을 수 없음");
       }
 
@@ -33,7 +105,7 @@ async function apiCall(url: string, options: RequestInit = {}) {
     console.log("✅ 응답 데이터:", data);
     return data;
   } catch (error) {
-    console.error(" API 호출 에러:", error);
+    console.error("🔥 API 호출 에러:", error);
 
     if (error instanceof TypeError && error.message.includes("fetch")) {
       throw new Error(
@@ -46,170 +118,234 @@ async function apiCall(url: string, options: RequestInit = {}) {
 }
 
 export const userApi = {
-  async getMe() {
-    const response = await apiCall("/api/user/me");
+  async getMe(): Promise<User> {
+    const response = await apiCall<ApiResponse<User> | User>("/api/user/me");
 
-    return response.data || response;
+    if (response && typeof response === "object" && "data" in response) {
+      return (response as ApiResponse<User>).data;
+    }
+    return response as User;
   },
 };
 
 export const testApi = {
-  // 테스트 목록 가져오기
-  async getList() {
-    const response = await apiCall("/api/test");
+  async getList(): Promise<Test[]> {
+    const response = await apiCall<ApiResponse<Test[]> | Test[]>("/api/test");
     console.log("테스트 목록 원본 응답:", response);
 
-    //  백엔드 응답 구조에 맞게 데이터 추출
-    if (response.data && Array.isArray(response.data)) {
-      return response.data;
-    } else if (
-      response.data &&
-      response.data.tests &&
-      Array.isArray(response.data.tests)
-    ) {
-      return response.data.tests;
-    } else if (Array.isArray(response)) {
-      return response;
+    if (response && typeof response === "object" && "data" in response) {
+      const apiResponse = response as ApiResponse<Test[]>;
+      if (Array.isArray(apiResponse.data)) {
+        return apiResponse.data;
+      }
     }
 
-    // 기본값으로 빈 배열 반환
+    if (Array.isArray(response)) {
+      return response as Test[];
+    }
+
     return [];
   },
 
-  // 새 테스트 생성
-  async create() {
-    const response = await apiCall("/api/test/create", { method: "POST" });
-    // 백엔드 응답 구조에 맞게 데이터 추출
-    return response.data || response;
+  async create(): Promise<Test> {
+    const response = await apiCall<ApiResponse<Test> | Test>(
+      "/api/test/create",
+      { method: "POST" },
+    );
+
+    if (response && typeof response === "object" && "data" in response) {
+      return (response as ApiResponse<Test>).data;
+    }
+    return response as Test;
   },
 
-  // 특정 테스트 정보 가져오기
-  async getById(testId: string) {
-    const response = await apiCall(`/api/test/${testId}`);
-    // 백엔드 응답 구조에 맞게 데이터 추출
-    return response.data || response;
+  async getById(testId: string): Promise<Test> {
+    const response = await apiCall<ApiResponse<Test> | Test>(
+      `/api/test/${testId}`,
+    );
+
+    if (response && typeof response === "object" && "data" in response) {
+      return (response as ApiResponse<Test>).data;
+    }
+    return response as Test;
   },
 
-  // 테스트 완료 여부 확인
-  async isFinished(testId: string) {
-    const response = await apiCall(`/api/test/${testId}/is-finished`);
-    // 백엔드 응답 구조에 맞게 데이터 추출
-    return response.data || response;
+  async isFinished(testId: string): Promise<{ isFinished: boolean }> {
+    const response = await apiCall<
+      ApiResponse<{ isFinished: boolean }> | { isFinished: boolean }
+    >(`/api/test/${testId}/is-finished`);
+
+    if (response && typeof response === "object" && "data" in response) {
+      return (response as ApiResponse<{ isFinished: boolean }>).data;
+    }
+    return response as { isFinished: boolean };
   },
 
-  //  퀴즈 리스트 가져오기 (백엔드 응답 구조에 맞게 수정)
-  async getQuizList(testId: string) {
-    const response = await apiCall(`/api/test/${testId}/quiz-list`);
+  async getQuizList(testId: string): Promise<QuizListItem[]> {
+    const response = await apiCall<
+      ApiResponse<{ quizList: QuizListItem[] }> | QuizListItem[]
+    >(`/api/test/${testId}/quiz-list`);
     console.log("퀴즈 리스트 원본 응답:", response);
 
-    //  백엔드에서 { data: { quizList: [...] } } 형태로 보내므로
-    if (
-      response.data &&
-      response.data.quizList &&
-      Array.isArray(response.data.quizList)
-    ) {
-      return response.data.quizList;
-    } else if (response.data && Array.isArray(response.data)) {
-      return response.data;
-    } else if (Array.isArray(response)) {
-      return response;
+    if (response && typeof response === "object" && "data" in response) {
+      const apiResponse = response as ApiResponse<{ quizList: QuizListItem[] }>;
+      if (
+        apiResponse.data &&
+        "quizList" in apiResponse.data &&
+        Array.isArray(apiResponse.data.quizList)
+      ) {
+        return apiResponse.data.quizList;
+      }
+      if (Array.isArray(apiResponse.data)) {
+        return apiResponse.data as unknown as QuizListItem[];
+      }
     }
 
-    // 기본값으로 빈 배열 반환
+    if (Array.isArray(response)) {
+      return response as QuizListItem[];
+    }
+
     console.warn("퀴즈 리스트 형태를 인식할 수 없음:", response);
     return [];
   },
 
-  // 테스트 결과 가져오기
-  async getResult(testId: string) {
-    const response = await apiCall(`/api/test/${testId}/result`);
-    // 백엔드 응답 구조에 맞게 데이터 추출
-    return response.data || response;
+  async getResult(testId: string): Promise<TestResult> {
+    const response = await apiCall<ApiResponse<TestResult> | TestResult>(
+      `/api/test/${testId}/result`,
+    );
+
+    if (response && typeof response === "object" && "data" in response) {
+      return (response as ApiResponse<TestResult>).data;
+    }
+    return response as TestResult;
   },
 
-  // 테스트 완료 처리
-  async finish(testId: string, data?: any) {
+  async finish(
+    testId: string,
+    data?: Record<string, unknown>,
+  ): Promise<unknown> {
     const response = await apiCall(`/api/test/${testId}`, {
       method: "POST",
       body: JSON.stringify(data || {}),
     });
-    // 백엔드 응답 구조에 맞게 데이터 추출
-    return response.data || response;
+
+    if (response && typeof response === "object" && "data" in response) {
+      return (response as ApiResponse<unknown>).data;
+    }
+    return response;
   },
 };
 
-//  퀴즈 관련 API
 export const quizApi = {
-  // 특정 퀴즈 정보 가져오기
-  async getById(testId: string, quizNumber: number) {
-    const response = await apiCall(`/api/test/${testId}/${quizNumber}`);
-    // 백엔드 응답 구조에 맞게 데이터 추출
-    return response.data || response;
+  async getById(testId: string, quizNumber: number): Promise<Quiz> {
+    const response = await apiCall<ApiResponse<{ quiz: QuizDetail }>>(
+      `/api/test/${testId}/${quizNumber}`,
+    );
+    console.log(`퀴즈 ${quizNumber} 상세 정보:`, response);
+
+    let quizDetail: QuizDetail;
+
+    if (response && typeof response === "object" && "data" in response) {
+      const apiResponse = response as ApiResponse<{ quiz: QuizDetail }>;
+      if (apiResponse.data && "quiz" in apiResponse.data) {
+        quizDetail = apiResponse.data.quiz;
+      } else {
+        throw new Error("퀴즈 데이터를 찾을 수 없습니다.");
+      }
+    } else {
+      throw new Error("응답 형식이 올바르지 않습니다.");
+    }
+
+    const quiz: Quiz = {
+      id: quizDetail.quizId,
+      quizNumber: quizNumber,
+      question: quizDetail.title,
+      options: [
+        `A. ${quizDetail.choices1}`,
+        `B. ${quizDetail.choices2}`,
+        `C. ${quizDetail.choices3}`,
+        `D. ${quizDetail.choices4}`,
+      ].filter((choice) => choice.length > 3),
+      questionType: quizDetail.multiple ? "multiple" : "single",
+      category: quizDetail.category,
+      multiple: quizDetail.multiple,
+      tags: quizDetail.tags,
+    };
+
+    console.log("✅ 변환된 퀴즈 데이터:", quiz);
+    return quiz;
   },
 
-  // 퀴즈 답안 제출
-  async submitAnswer(testId: string, quizNumber: number, answer: string) {
+  async submitAnswer(
+    testId: string,
+    quizNumber: number,
+    answer: string,
+  ): Promise<unknown> {
     const response = await apiCall(`/api/test/${testId}/${quizNumber}`, {
       method: "POST",
       body: JSON.stringify({ answer }),
     });
-    // 백엔드 응답 구조에 맞게 데이터 추출
-    return response.data || response;
+
+    if (response && typeof response === "object" && "data" in response) {
+      return (response as ApiResponse<unknown>).data;
+    }
+    return response;
   },
 
-  // 퀴즈 결과 가져오기 (사용자 답, 정답, 해설)
-  async getResult(testId: string, quizNumber: number) {
-    const response = await apiCall(`/api/test/${testId}/${quizNumber}/result`);
-    // 백엔드 응답 구조에 맞게 데이터 추출
-    return response.data || response;
+  async getResult(testId: string, quizNumber: number): Promise<QuizResult> {
+    const response = await apiCall<ApiResponse<QuizResult> | QuizResult>(
+      `/api/test/${testId}/${quizNumber}/result`,
+    );
+
+    if (response && typeof response === "object" && "data" in response) {
+      return (response as ApiResponse<QuizResult>).data;
+    }
+    return response as QuizResult;
   },
 };
 
-//  에러 처리 헬퍼
 export const apiErrorHandler = {
-  // 사용자 친화적 에러 메시지
-  getErrorMessage(error: any): string {
-    if (error.message?.includes("네트워크 연결 오류")) {
-      return "백엔드 서버가 실행되지 않고 있습니다. 백엔드 개발자에게 문의하세요.";
+  getErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+      if (error.message?.includes("네트워크 연결 오류")) {
+        return "백엔드 서버가 실행되지 않고 있습니다. 백엔드 개발자에게 문의하세요.";
+      }
+      if (error.message?.includes("404")) {
+        return "요청한 API 엔드포인트를 찾을 수 없습니다. 백엔드 API가 구현되지 않았을 수 있습니다.";
+      }
+      if (error.message?.includes("500")) {
+        return "백엔드 서버에 오류가 발생했습니다. 백엔드 로그를 확인해주세요.";
+      }
+      if (error.message?.includes("401")) {
+        return "인증이 필요합니다. 로그인 상태를 확인해주세요.";
+      }
+      if (error.message?.includes("403")) {
+        return "접근 권한이 없습니다.";
+      }
+      return error.message;
     }
-    if (error.message?.includes("404")) {
-      return "요청한 API 엔드포인트를 찾을 수 없습니다. 백엔드 API가 구현되지 않았을 수 있습니다.";
-    }
-    if (error.message?.includes("500")) {
-      return "백엔드 서버에 오류가 발생했습니다. 백엔드 로그를 확인해주세요.";
-    }
-    if (error.message?.includes("401")) {
-      return "인증이 필요합니다. 로그인 상태를 확인해주세요.";
-    }
-    if (error.message?.includes("403")) {
-      return "접근 권한이 없습니다.";
-    }
-    return error.message || "알 수 없는 오류가 발생했습니다.";
+    return "알 수 없는 오류가 발생했습니다.";
   },
 
-  // 에러 알림 표시
-  showError(error: any) {
+  showError(error: unknown) {
     const message = this.getErrorMessage(error);
     alert(message);
     console.error("에러 상세:", error);
   },
 };
 
-//  백엔드 상태 확인 함수
 export const healthCheck = {
-  // 백엔드 서버 상태 확인
-  async checkServer() {
+  async checkServer(): Promise<boolean> {
     try {
       const response = await fetch("/api/health", { method: "GET" });
       console.log("서버 상태:", response.status);
       return response.status === 200;
-    } catch (error) {
-      console.log("서버 연결 실패:", error);
+    } catch {
+      console.log("서버 연결 실패");
       return false;
     }
   },
 
-  // 각 API 엔드포인트 테스트
   async testEndpoints() {
     const endpoints = [
       { name: "사용자 정보", url: "/api/user/me" },
@@ -226,7 +362,7 @@ export const healthCheck = {
         console.log(
           `${endpoint.name}: ${response.status} ${response.statusText}`,
         );
-      } catch (error) {
+      } catch {
         console.log(`${endpoint.name}: 연결 실패`);
       }
     }
