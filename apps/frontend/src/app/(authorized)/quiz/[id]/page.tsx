@@ -35,28 +35,22 @@ export default function QuizPage() {
   const [submitting, setSubmitting] = useState(false);
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
 
-  const [debugInfo, setDebugInfo] = useState<string>("");
+  const [userSelectedAnswer, setUserSelectedAnswer] = useState<string | null>(
+    null,
+  );
 
   const loadQuizData = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setDebugInfo("로딩 시작...");
 
     try {
       console.log("🔥 테스트 데이터 로딩 시작:", testId);
-      setDebugInfo(`테스트 ID: ${testId} 로딩 중...`);
 
-      console.log("1. 테스트 정보 요청 중...");
-      setDebugInfo("1. 테스트 정보 요청 중...");
       const testInfo: Test = await testApi.getById(testId);
       console.log("✅ 테스트 정보:", testInfo);
-      setDebugInfo(`1. 테스트 정보 완료: ${JSON.stringify(testInfo, null, 2)}`);
 
-      console.log("2. 퀴즈 리스트 요청 중...");
-      setDebugInfo("2. 퀴즈 리스트 요청 중...");
       const quizList: QuizListItem[] = await testApi.getQuizList(testId);
       console.log("✅ 퀴즈 리스트:", quizList);
-      setDebugInfo(`2. 퀴즈 리스트 완료: ${JSON.stringify(quizList, null, 2)}`);
 
       if (!quizList || quizList.length === 0) {
         throw new Error("이 테스트에는 문제가 없습니다.");
@@ -64,27 +58,16 @@ export default function QuizPage() {
 
       const firstQuizItem = quizList[0];
       console.log("🔥 첫 번째 퀴즈 아이템:", firstQuizItem);
-      setDebugInfo(
-        `3. 첫 번째 퀴즈 아이템: ${JSON.stringify(firstQuizItem, null, 2)}`,
-      );
 
       if (!firstQuizItem || typeof firstQuizItem.quizNumber === "undefined") {
         throw new Error("첫 번째 퀴즈 정보가 올바르지 않습니다.");
       }
-
-      console.log("3. 첫 번째 퀴즈 상세 정보 요청 중...");
-      setDebugInfo(
-        `3. 퀴즈 상세 정보 요청 중... (quizNumber: ${firstQuizItem.quizNumber})`,
-      );
 
       const firstQuiz: Quiz = await quizApi.getById(
         testId,
         firstQuizItem.quizNumber,
       );
       console.log("✅ 첫 번째 퀴즈 상세:", firstQuiz);
-      setDebugInfo(
-        `3. 퀴즈 상세 정보 완료: ${JSON.stringify(firstQuiz, null, 2)}`,
-      );
 
       const finalQuizData = {
         title: testInfo.title || `SQLD 테스트 #${testId}`,
@@ -94,15 +77,11 @@ export default function QuizPage() {
       };
 
       setQuizData(finalQuizData);
-      setDebugInfo(
-        `✅ 모든 데이터 로딩 완료: ${JSON.stringify(finalQuizData, null, 2)}`,
-      );
       console.log("✅ 퀴즈 데이터 설정 완료", finalQuizData);
     } catch (err) {
       console.error("❌ 퀴즈 데이터 로딩 에러:", err);
       const errorMessage = apiErrorHandler.getErrorMessage(err);
       setError(errorMessage);
-      setDebugInfo(`❌ 에러: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -149,6 +128,7 @@ export default function QuizPage() {
   const handleAnswerSelect = (option: string) => {
     if (showAnswer) return;
     setSelectedAnswer(option);
+    setUserSelectedAnswer(option);
   };
 
   const handleSubmitAnswer = async () => {
@@ -171,14 +151,22 @@ export default function QuizPage() {
         testId,
         quizData.currentQuiz.quizNumber,
       );
-      setQuizResult(result);
 
-      if (result.isCorrect) {
+      const correctedResult = {
+        ...result,
+        userAnswer: userSelectedAnswer || selectedAnswer,
+        isCorrect:
+          (userSelectedAnswer || selectedAnswer) === result.correctAnswer,
+      };
+
+      setQuizResult(correctedResult);
+
+      if (correctedResult.isCorrect) {
         setScore((prev) => prev + 1);
       }
 
       setShowAnswer(true);
-      console.log("✅ 답안 제출 완료:", result);
+      console.log("✅ 답안 제출 완료:", correctedResult);
     } catch (err) {
       console.error("❌ 답안 제출 에러:", err);
       apiErrorHandler.showError(err);
@@ -190,6 +178,7 @@ export default function QuizPage() {
   const handleNextQuestion = async () => {
     setShowAnswer(false);
     setSelectedAnswer(null);
+    setUserSelectedAnswer(null);
     setQuizResult(null);
 
     if (currentQuestionIndex < quizData!.totalQuestions - 1) {
@@ -208,13 +197,8 @@ export default function QuizPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-96 flex-col items-center justify-center">
-        <div className="mb-4 text-lg text-slate-600">퀴즈를 불러오는 중...</div>
-        {/* 🔥🔥🔥 디버깅 정보 표시 */}
-        <div className="w-full max-w-2xl rounded bg-gray-100 p-4 text-sm">
-          <strong>디버깅 정보:</strong>
-          <pre className="mt-2 whitespace-pre-wrap">{debugInfo}</pre>
-        </div>
+      <div className="flex min-h-96 items-center justify-center">
+        <div className="text-lg text-slate-600">퀴즈를 불러오는 중...</div>
       </div>
     );
   }
@@ -223,11 +207,6 @@ export default function QuizPage() {
     return (
       <div className="flex min-h-96 flex-col items-center justify-center">
         <div className="mb-4 text-red-500">오류: {error}</div>
-        {/* 🔥🔥🔥 디버깅 정보 표시 */}
-        <div className="mb-4 w-full max-w-2xl rounded bg-gray-100 p-4 text-sm">
-          <strong>디버깅 정보:</strong>
-          <pre className="mt-2 whitespace-pre-wrap">{debugInfo}</pre>
-        </div>
         <Link
           href="/quiz"
           className="rounded-md bg-blue-500 px-4 py-2 text-white transition-colors hover:bg-blue-600"
@@ -244,17 +223,6 @@ export default function QuizPage() {
         <p className="text-xl text-slate-600">
           퀴즈 데이터를 찾을 수 없습니다.
         </p>
-        {/* 🔥🔥🔥 디버깅 정보 표시 */}
-        <div className="mx-auto mt-4 w-full max-w-2xl rounded bg-gray-100 p-4 text-sm">
-          <strong>디버깅 정보:</strong>
-          <pre className="mt-2 whitespace-pre-wrap">{debugInfo}</pre>
-          <div className="mt-4">
-            <strong>quizData:</strong>
-            <pre className="mt-2 whitespace-pre-wrap">
-              {JSON.stringify(quizData, null, 2)}
-            </pre>
-          </div>
-        </div>
         <Link
           href="/quiz"
           className="mt-4 inline-block text-blue-500 hover:underline"
@@ -302,32 +270,6 @@ export default function QuizPage() {
 
   return (
     <div className="mx-auto mt-8 max-w-2xl rounded-lg bg-white p-6 shadow-xl md:p-8">
-      {/* 🔥🔥🔥 개발 중에만 디버깅 정보 표시 */}
-      <div className="mb-4 rounded border border-yellow-200 bg-yellow-50 p-4 text-sm">
-        <strong>디버깅 정보:</strong>
-        <div className="mt-2">
-          <div>
-            <strong>testId:</strong> {testId}
-          </div>
-          <div>
-            <strong>currentQuiz:</strong> {currentQuiz ? "있음" : "없음"}
-          </div>
-          <div>
-            <strong>question:</strong> {currentQuiz?.question || "없음"}
-          </div>
-          <div>
-            <strong>options:</strong>{" "}
-            {currentQuiz?.options
-              ? JSON.stringify(currentQuiz.options)
-              : "없음"}
-          </div>
-          <div>
-            <strong>multiple:</strong>{" "}
-            {currentQuiz?.multiple ? "다중선택" : "단일선택"}
-          </div>
-        </div>
-      </div>
-
       <h1 className="mb-2 text-2xl font-bold text-slate-700">
         {quizData.title}
       </h1>

@@ -50,11 +50,43 @@ export interface Quiz {
   tags?: string;
 }
 
+export interface QuizResultResponse {
+  quiz: Array<{
+    id: number;
+    category: number;
+    tags: string;
+    title: string;
+    content_img: string;
+    content_text: string;
+    choices1: string;
+    choices2: string;
+    choices3: string;
+    choices4: string;
+    multiple: boolean;
+    answer_explanation: string;
+  }>;
+  testQuiz: {
+    id: number;
+    testId: number;
+    quizId: number;
+    quizNumber: number;
+    solvedAt: string;
+  };
+  userChoices: unknown[];
+  answers: number[];
+}
+
 export interface QuizResult {
   isCorrect: boolean;
   correctAnswer: string;
   userAnswer: string;
   explanation?: string;
+  quiz?: {
+    id: number;
+    title: string;
+    choices: string[];
+    multiple: boolean;
+  };
 }
 
 export interface TestResult {
@@ -293,14 +325,81 @@ export const quizApi = {
   },
 
   async getResult(testId: string, quizNumber: number): Promise<QuizResult> {
-    const response = await apiCall<ApiResponse<QuizResult> | QuizResult>(
+    const response = await apiCall<ApiResponse<QuizResultResponse>>(
       `/api/test/${testId}/${quizNumber}/result`,
     );
+    console.log(`퀴즈 ${quizNumber} 결과:`, response);
+
+    let resultData: QuizResultResponse;
 
     if (response && typeof response === "object" && "data" in response) {
-      return (response as ApiResponse<QuizResult>).data;
+      const apiResponse = response as ApiResponse<QuizResultResponse>;
+      resultData = apiResponse.data;
+    } else {
+      throw new Error("응답 형식이 올바르지 않습니다.");
     }
-    return response as QuizResult;
+
+    if (
+      !resultData.quiz ||
+      !Array.isArray(resultData.quiz) ||
+      resultData.quiz.length === 0
+    ) {
+      throw new Error("퀴즈 데이터가 없습니다.");
+    }
+
+    if (
+      !resultData.answers ||
+      !Array.isArray(resultData.answers) ||
+      resultData.answers.length === 0
+    ) {
+      throw new Error("정답 데이터가 없습니다.");
+    }
+
+    const firstQuiz = resultData.quiz[0];
+    const firstAnswerIndex = resultData.answers[0];
+
+    if (!firstQuiz) {
+      throw new Error("첫 번째 퀴즈 데이터가 없습니다.");
+    }
+
+    if (
+      typeof firstAnswerIndex !== "number" ||
+      firstAnswerIndex < 1 ||
+      firstAnswerIndex > 4
+    ) {
+      throw new Error("정답 인덱스가 올바르지 않습니다.");
+    }
+
+    const answerLetters = ["A", "B", "C", "D"] as const;
+    const correctAnswerLetter: string =
+      answerLetters[firstAnswerIndex - 1] || "A";
+
+    const userAnswer = "";
+
+    const cleanExplanation = firstQuiz.answer_explanation
+      ? firstQuiz.answer_explanation.replace(/^해설:\s*/, "")
+      : "";
+
+    const quizResult: QuizResult = {
+      isCorrect: false,
+      correctAnswer: correctAnswerLetter,
+      userAnswer: userAnswer,
+      explanation: cleanExplanation,
+      quiz: {
+        id: firstQuiz.id,
+        title: firstQuiz.title,
+        choices: [
+          firstQuiz.choices1,
+          firstQuiz.choices2,
+          firstQuiz.choices3,
+          firstQuiz.choices4,
+        ],
+        multiple: firstQuiz.multiple,
+      },
+    };
+
+    console.log("✅ 변환된 퀴즈 결과:", quizResult);
+    return quizResult;
   },
 };
 
