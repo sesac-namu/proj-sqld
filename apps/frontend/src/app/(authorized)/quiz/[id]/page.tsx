@@ -1,3 +1,4 @@
+// app/(authorized)/quiz/[id]/page.tsx
 "use client";
 
 import Link from "next/link";
@@ -35,10 +36,12 @@ export default function QuizPage() {
   const [submitting, setSubmitting] = useState(false);
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
 
+  // 🔥 사용자가 선택한 답안을 저장 (임시 해결책)
   const [userSelectedAnswer, setUserSelectedAnswer] = useState<string | null>(
     null,
   );
 
+  // 테스트 데이터 및 첫 번째 퀴즈 로드
   const loadQuizData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -46,9 +49,11 @@ export default function QuizPage() {
     try {
       console.log("🔥 테스트 데이터 로딩 시작:", testId);
 
+      // 1. 테스트 정보 가져오기
       const testInfo: Test = await testApi.getById(testId);
       console.log("✅ 테스트 정보:", testInfo);
 
+      // 2. 퀴즈 리스트 가져오기
       const quizList: QuizListItem[] = await testApi.getQuizList(testId);
       console.log("✅ 퀴즈 리스트:", quizList);
 
@@ -56,6 +61,7 @@ export default function QuizPage() {
         throw new Error("이 테스트에는 문제가 없습니다.");
       }
 
+      // 3. 첫 번째 퀴즈 상세 정보 가져오기
       const firstQuizItem = quizList[0];
       console.log("🔥 첫 번째 퀴즈 아이템:", firstQuizItem);
 
@@ -70,7 +76,7 @@ export default function QuizPage() {
       console.log("✅ 첫 번째 퀴즈 상세:", firstQuiz);
 
       const finalQuizData = {
-        title: testInfo.title || `SQLD 테스트 #${testId}`,
+        title: `SQLD 테스트 #${testId}`,
         totalQuestions: quizList.length,
         currentQuiz: firstQuiz,
         quizList: quizList,
@@ -87,6 +93,7 @@ export default function QuizPage() {
     }
   }, [testId]);
 
+  // 다음 문제 로드
   const loadNextQuestion = async (questionIndex: number) => {
     try {
       if (!quizData) return;
@@ -125,12 +132,14 @@ export default function QuizPage() {
     }
   }, [testId, loadQuizData]);
 
+  // 답안 선택
   const handleAnswerSelect = (option: string) => {
     if (showAnswer) return;
     setSelectedAnswer(option);
-    setUserSelectedAnswer(option);
+    setUserSelectedAnswer(option); // 🔥 사용자 선택 답안 저장
   };
 
+  // 답안 제출
   const handleSubmitAnswer = async () => {
     if (!selectedAnswer || !quizData?.currentQuiz) {
       alert("답을 선택해주세요.");
@@ -141,17 +150,20 @@ export default function QuizPage() {
     try {
       console.log("🔥 답안 제출:", selectedAnswer);
 
+      // 답안 제출
       await quizApi.submitAnswer(
         testId,
         quizData.currentQuiz.quizNumber,
         selectedAnswer,
       );
 
+      // 퀴즈 결과 가져오기 (정답, 해설 등)
       const result: QuizResult = await quizApi.getResult(
         testId,
         quizData.currentQuiz.quizNumber,
       );
 
+      // 🔥 사용자 답안과 정답 비교 (임시 해결책)
       const correctedResult = {
         ...result,
         userAnswer: userSelectedAnswer || selectedAnswer,
@@ -161,6 +173,7 @@ export default function QuizPage() {
 
       setQuizResult(correctedResult);
 
+      // 정답 확인
       if (correctedResult.isCorrect) {
         setScore((prev) => prev + 1);
       }
@@ -175,10 +188,11 @@ export default function QuizPage() {
     }
   };
 
+  // 다음 문제로
   const handleNextQuestion = async () => {
     setShowAnswer(false);
     setSelectedAnswer(null);
-    setUserSelectedAnswer(null);
+    setUserSelectedAnswer(null); // 🔥 사용자 선택 답안 초기화
     setQuizResult(null);
 
     if (currentQuestionIndex < quizData!.totalQuestions - 1) {
@@ -186,6 +200,7 @@ export default function QuizPage() {
       await loadNextQuestion(nextIndex);
       setCurrentQuestionIndex(nextIndex);
     } else {
+      // 테스트 완료 처리
       try {
         await testApi.finish(testId);
         setIsQuizFinished(true);
@@ -195,6 +210,7 @@ export default function QuizPage() {
     }
   };
 
+  // 로딩 상태
   if (loading) {
     return (
       <div className="flex min-h-96 items-center justify-center">
@@ -203,6 +219,7 @@ export default function QuizPage() {
     );
   }
 
+  // 에러 상태
   if (error) {
     return (
       <div className="flex min-h-96 flex-col items-center justify-center">
@@ -233,6 +250,7 @@ export default function QuizPage() {
     );
   }
 
+  // 퀴즈 완료 화면
   if (isQuizFinished) {
     return (
       <div className="mx-auto mt-10 max-w-lg rounded-lg bg-white p-8 text-center shadow-xl">
@@ -295,13 +313,31 @@ export default function QuizPage() {
           Q. {currentQuiz.question || "문제를 불러올 수 없습니다."}
         </h2>
 
+        {/* 🔥 문제 이미지가 있는 경우 표시 */}
+        {currentQuiz.contentImg && (
+          <div className="mb-4">
+            <img
+              src={currentQuiz.contentImg}
+              alt="문제 이미지"
+              className="mx-auto max-w-full rounded border"
+            />
+          </div>
+        )}
+
+        {/* 🔥 문제 추가 텍스트가 있는 경우 표시 */}
+        {currentQuiz.contentText && (
+          <div className="mb-4 rounded bg-gray-50 p-3 text-sm text-gray-700">
+            {currentQuiz.contentText}
+          </div>
+        )}
+
         {/* 객관식 문제 */}
         {currentQuiz.options && currentQuiz.options.length > 0 && (
           <div className="space-y-3">
             {currentQuiz.options.map((option: string, index: number) => (
               <button
                 key={index}
-                onClick={() => handleAnswerSelect(option.charAt(0))}
+                onClick={() => handleAnswerSelect(option.charAt(0))} // A, B, C, D
                 disabled={showAnswer}
                 className={`block w-full rounded-md border p-3 text-left transition-all ${
                   selectedAnswer === option.charAt(0)

@@ -1,45 +1,24 @@
+// app/(authorized)/quiz/page.tsx
 "use client";
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { apiErrorHandler, Test, testApi } from "@/lib/api";
+import { apiErrorHandler, testApi, TestUI } from "@/lib/api";
 
 export default function QuizListPage() {
-  const [tests, setTests] = useState<Test[]>([]);
+  const [tests, setTests] = useState<TestUI[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
 
+  // 테스트 목록 가져오기
   const fetchTests = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const data = await testApi.getList();
-
-      console.log("받은 데이터:", data);
-      console.log("데이터 타입:", typeof data);
-      console.log("배열인가?:", Array.isArray(data));
-
-      let testsArray: Test[] = [];
-
-      if (Array.isArray(data)) {
-        testsArray = data;
-      } else if (data && typeof data === "object") {
-        const dataObj = data as Record<string, unknown>;
-        if (dataObj.tests && Array.isArray(dataObj.tests)) {
-          testsArray = dataObj.tests as Test[];
-        } else if (dataObj.data && Array.isArray(dataObj.data)) {
-          testsArray = dataObj.data as Test[];
-        } else {
-          testsArray = Object.values(dataObj).filter(
-            (item): item is Test =>
-              item != null && typeof item === "object" && "id" in item,
-          );
-        }
-      }
-
-      console.log("최종 배열:", testsArray);
-      setTests(testsArray);
+      console.log("받은 테스트 데이터:", data);
+      setTests(data);
     } catch (err) {
       const errorMessage = apiErrorHandler.getErrorMessage(err);
       setError(errorMessage);
@@ -49,13 +28,14 @@ export default function QuizListPage() {
     }
   }, []);
 
+  // 새 테스트 생성
   const createNewTest = async () => {
     setCreating(true);
     try {
       const newTestData = await testApi.create();
       console.log("생성된 테스트:", newTestData);
-      alert("새 테스트가 생성되었습니다!");
-
+      alert(`새 테스트가 생성되었습니다! (ID: ${newTestData.testId})`);
+      // 목록 새로고침
       await fetchTests();
     } catch (err) {
       apiErrorHandler.showError(err);
@@ -65,10 +45,12 @@ export default function QuizListPage() {
     }
   };
 
+  // 컴포넌트 마운트 시 데이터 로드
   useEffect(() => {
     fetchTests();
   }, [fetchTests]);
 
+  // 로딩 상태
   if (loading) {
     return (
       <div className="flex min-h-96 items-center justify-center">
@@ -79,6 +61,7 @@ export default function QuizListPage() {
     );
   }
 
+  // 에러 상태
   if (error) {
     return (
       <div className="flex min-h-96 flex-col items-center justify-center">
@@ -109,7 +92,7 @@ export default function QuizListPage() {
 
       {/* 테스트 목록 */}
       <div className="grid gap-6 p-7 md:grid-cols-2 lg:grid-cols-3">
-        {Array.isArray(tests) && tests.length > 0 ? (
+        {tests.length > 0 ? (
           tests.map((test) => (
             <div
               key={test.id}
@@ -125,7 +108,7 @@ export default function QuizListPage() {
               {/* 테스트 정보 */}
               <div className="mb-4 space-y-2">
                 <div className="flex items-center justify-between text-xs text-slate-500">
-                  <span>{test.totalQuestions || "??"} 문제</span>
+                  <span>SQLD 문제</span>
                   <span
                     className={`rounded-full px-2 py-1 text-xs ${
                       test.isFinished
@@ -136,6 +119,14 @@ export default function QuizListPage() {
                     {test.isFinished ? "완료" : "진행 가능"}
                   </span>
                 </div>
+
+                {/* 점수 표시 (완료된 경우만) */}
+                {test.isFinished && test.score !== null && (
+                  <div className="text-xs text-slate-500">
+                    점수: {test.score}점
+                  </div>
+                )}
+
                 <div className="text-xs text-slate-400">
                   생성일:{" "}
                   {test.createdAt
@@ -165,12 +156,9 @@ export default function QuizListPage() {
             </div>
           ))
         ) : (
+          // 빈 상태 처리
           <div className="col-span-full py-12 text-center">
-            <p className="mb-4 text-slate-500">
-              {Array.isArray(tests)
-                ? "아직 테스트가 없습니다."
-                : "테스트 데이터를 불러올 수 없습니다."}
-            </p>
+            <p className="mb-4 text-slate-500">아직 테스트가 없습니다.</p>
             <button
               onClick={createNewTest}
               disabled={creating}
