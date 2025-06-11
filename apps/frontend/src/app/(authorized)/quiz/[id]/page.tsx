@@ -229,10 +229,16 @@ export default function QuizPage() {
     return (
       <div className="mx-auto mt-10 max-w-lg rounded-lg bg-white p-8 text-center shadow-xl">
         <h2 className="mb-6 text-2xl font-bold text-slate-700">퀴즈 완료!</h2>
+
         <p className="mb-4 text-xl">
           총 <span className="font-semibold">{quizData.totalQuestions}</span>
           문제 중<span className="font-semibold text-green-600"> {score}</span>
           문제를 맞혔습니다.
+        </p>
+        <p className="mb-8 text-lg">
+          점수:{" "}
+          <span className="font-semibold text-blue-600">{score * 2}점</span> /
+          100점
         </p>
         <p className="mb-8 text-lg">
           정답률:{" "}
@@ -240,6 +246,7 @@ export default function QuizPage() {
             {((score / quizData.totalQuestions) * 100).toFixed(1)}%
           </span>
         </p>
+
         <div className="space-y-3">
           <Link
             href={`/quiz/${testId}/result`}
