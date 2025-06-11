@@ -1,4 +1,4 @@
-//// app/(authorized)/quiz/page.tsx
+// app/(authorized)/quiz/page.tsx
 
 "use client";
 

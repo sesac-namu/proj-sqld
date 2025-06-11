@@ -1,3 +1,5 @@
+// apps/frontend/src/lib/api.ts
+
 export interface User {
   id: string;
   name: string;
@@ -268,12 +270,12 @@ export const testApi = {
                   });
                 });
 
-                realScore = correctCount * 2;
+                realScore = correctCount * 2; // SQLD는 문제당 2점
 
                 console.log(`✅ 테스트 ${test.id} 점수 계산 완료:`, {
                   총문제: totalQuizzes,
                   정답수: correctCount,
-                  점수: realScore * 2,
+                  점수: realScore,
                   정답률: `${Math.round((correctCount / totalQuizzes) * 100)}%`,
                 });
               }
@@ -423,7 +425,8 @@ export const testApi = {
 
     console.log("🎯 실제 계산된 결과:", {
       총문제수: totalQuestions,
-      실제정답수: realCorrectCount * 2,
+      실제정답수: realCorrectCount,
+      실제점수: realCorrectCount * 2, // 정답수 * 2
       백엔드점수: resultData.test.score,
       실제정답률: `${realPercentage.toFixed(1)}%`,
     });
