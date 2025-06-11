@@ -1,116 +1,275 @@
-// lib/api.ts
+import { useCallback, useState } from "react";
+import {
+  apiErrorHandler,
+  Quiz,
+  quizApi,
+  QuizListItem,
+  QuizResult,
+  Test,
+  testApi,
+  TestResult,
+  TestUI,
+  User,
+  userApi,
+} from "@/lib/api";
 
-// 🔥 기본 API 호출 함수
-async function apiCall(url: string, options: RequestInit = {}) {
-  try {
-    const response = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-      ...options,
-    });
+function useApiState<T>() {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+  const execute = useCallback(async (apiCall: () => Promise<T>) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await apiCall();
+      setData(result);
+      return result;
+    } catch (err) {
+      const errorMessage = apiErrorHandler.getErrorMessage(err);
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
     }
+  }, []);
 
-    return await response.json();
-  } catch (error) {
-    console.error("API 호출 에러:", error);
-    throw error;
-  }
+  const reset = useCallback(() => {
+    setData(null);
+    setError(null);
+    setLoading(false);
+  }, []);
+
+  return { data, loading, error, execute, reset };
 }
 
-// 🔥🔥🔥🔥🔥 사용자 관련 API
-export const userApi = {
-  // 사용자 정보 가져오기
-  async getMe() {
-    return apiCall("/api/user/me");
-  },
-};
+export function useUser() {
+  const { data: user, loading, error, execute } = useApiState<User>();
 
-// 🔥🔥🔥🔥🔥 테스트 관련 API
-export const testApi = {
-  // 테스트 목록 가져오기
-  async getList() {
-    return apiCall("/api/test");
-  },
+  const fetchUser = useCallback(async () => {
+    return execute(() => userApi.getMe());
+  }, [execute]);
 
-  // 새 테스트 생성
-  async create() {
-    return apiCall("/api/test/create", { method: "POST" });
-  },
+  return { user, loading, error, fetchUser };
+}
 
-  // 특정 테스트 정보 가져오기
-  async getById(testId: string) {
-    return apiCall(`/api/test/${testId}`);
-  },
+export function useTestList() {
+  const { data: tests, loading, error, execute } = useApiState<TestUI[]>();
 
-  // 테스트 완료 여부 확인
-  async isFinished(testId: string) {
-    return apiCall(`/api/test/${testId}/is-finished`);
-  },
+  const fetchTests = useCallback(async () => {
+    return execute(() => testApi.getList());
+  }, [execute]);
 
-  // 퀴즈 리스트 가져오기
-  async getQuizList(testId: string) {
-    return apiCall(`/api/test/${testId}/quiz-list`);
-  },
+  const createTest = useCallback(async () => {
+    const newTest = await testApi.create();
 
-  // 테스트 결과 가져오기
-  async getResult(testId: string) {
-    return apiCall(`/api/test/${testId}/result`);
-  },
+    await fetchTests();
+    return newTest;
+  }, [fetchTests]);
 
-  // 테스트 완료 처리
-  async finish(testId: string, data?: any) {
-    return apiCall(`/api/test/${testId}`, {
-      method: "POST",
-      body: JSON.stringify(data || {}),
-    });
-  },
-};
+  return { tests, loading, error, fetchTests, createTest };
+}
 
-// 🔥🔥🔥🔥🔥 퀴즈 관련 API
-export const quizApi = {
-  // 특정 퀴즈 정보 가져오기
-  async getById(testId: string, quizNumber: number) {
-    return apiCall(`/api/test/${testId}/${quizNumber}`);
-  },
+export function useTest(testId: string) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // 퀴즈 답안 제출
-  async submitAnswer(testId: string, quizNumber: number, answer: string) {
-    return apiCall(`/api/test/${testId}/${quizNumber}`, {
-      method: "POST",
-      body: JSON.stringify({ answer }),
-    });
-  },
+  const [test, setTest] = useState<Test | null>(null);
+  const [isFinished, setIsFinished] = useState<{ isFinished: boolean } | null>(
+    null,
+  );
+  const [quizList, setQuizList] = useState<QuizListItem[] | null>(null);
+  const [testResult, setTestResult] = useState<TestResult | null>(null);
 
-  // 퀴즈 결과 가져오기 (사용자 답, 정답, 해설)
-  async getResult(testId: string, quizNumber: number) {
-    return apiCall(`/api/test/${testId}/${quizNumber}/result`);
-  },
-};
-
-// 🔥🔥🔥🔥🔥 에러 처리 헬퍼
-export const apiErrorHandler = {
-  // 사용자 친화적 에러 메시지
-  getErrorMessage(error: any): string {
-    if (error.message?.includes("404")) {
-      return "요청한 데이터를 찾을 수 없습니다.";
+  const fetchTest = useCallback(async () => {
+    if (!testId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await testApi.getById(testId);
+      setTest(result);
+      return result;
+    } catch (err) {
+      const errorMessage = apiErrorHandler.getErrorMessage(err);
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
     }
-    if (error.message?.includes("500")) {
-      return "서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
-    }
-    if (error.message?.includes("Network")) {
-      return "네트워크 연결을 확인해주세요.";
-    }
-    return error.message || "알 수 없는 오류가 발생했습니다.";
-  },
+  }, [testId]);
 
-  // 에러 알림 표시
-  showError(error: any) {
-    const message = this.getErrorMessage(error);
-    alert(message); // 나중에 toast 라이브러리로 변경 가능
-  },
-};
+  const checkFinished = useCallback(async () => {
+    if (!testId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await testApi.isFinished(testId);
+      setIsFinished(result);
+      return result;
+    } catch (err) {
+      const errorMessage = apiErrorHandler.getErrorMessage(err);
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [testId]);
+
+  const getQuizList = useCallback(async () => {
+    if (!testId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await testApi.getQuizList(testId);
+      setQuizList(result);
+      return result;
+    } catch (err) {
+      const errorMessage = apiErrorHandler.getErrorMessage(err);
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [testId]);
+
+  const getResult = useCallback(async () => {
+    if (!testId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await testApi.getResult(testId);
+      setTestResult(result);
+      return result;
+    } catch (err) {
+      const errorMessage = apiErrorHandler.getErrorMessage(err);
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [testId]);
+
+  const finishTest = useCallback(
+    async (data?: Record<string, unknown>) => {
+      if (!testId) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await testApi.finish(testId, data);
+        return result;
+      } catch (err) {
+        const errorMessage = apiErrorHandler.getErrorMessage(err);
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [testId],
+  );
+
+  return {
+    test,
+    isFinished,
+    quizList,
+    testResult,
+    loading,
+    error,
+    fetchTest,
+    checkFinished,
+    getQuizList,
+    getResult,
+    finishTest,
+  };
+}
+
+export function useQuiz(testId: string, quizNumber: number) {
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
+
+  const fetchQuiz = useCallback(async () => {
+    if (!testId || !quizNumber) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await quizApi.getById(testId, quizNumber);
+      setQuiz(result);
+      return result;
+    } catch (err) {
+      const errorMessage = apiErrorHandler.getErrorMessage(err);
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [testId, quizNumber]);
+
+  const submitAnswer = useCallback(
+    async (answer: string) => {
+      if (!testId || !quizNumber || !answer) return;
+
+      setSubmitting(true);
+      try {
+        const result = await quizApi.submitAnswer(testId, quizNumber, answer);
+        return result;
+      } catch (err) {
+        apiErrorHandler.showError(err);
+        throw err;
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [testId, quizNumber],
+  );
+
+  const getResult = useCallback(async () => {
+    if (!testId || !quizNumber) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await quizApi.getResult(testId, quizNumber);
+      setQuizResult(result);
+      return result;
+    } catch (err) {
+      const errorMessage = apiErrorHandler.getErrorMessage(err);
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [testId, quizNumber]);
+
+  return {
+    quiz,
+    quizResult,
+    loading,
+    error,
+    submitting,
+    fetchQuiz,
+    submitAnswer,
+    getResult,
+  };
+}
+
+export function useApiCall() {
+  const [loading, setLoading] = useState(false);
+
+  const call = useCallback(async (apiCall: () => Promise<unknown>) => {
+    setLoading(true);
+    try {
+      const result = await apiCall();
+      return result;
+    } catch (err) {
+      apiErrorHandler.showError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { loading, call };
+}

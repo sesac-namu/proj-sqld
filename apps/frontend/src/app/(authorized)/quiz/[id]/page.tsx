@@ -4,20 +4,21 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { apiErrorHandler, quizApi, testApi } from "@/lib/api";
-
-interface Quiz {
-  id: number;
-  quizNumber: number;
-  question: string;
-  options?: string[];
-  questionType: string;
-}
+import {
+  apiErrorHandler,
+  Quiz,
+  quizApi,
+  QuizListItem,
+  QuizResult,
+  Test,
+  testApi,
+} from "@/lib/api";
 
 interface QuizData {
   title: string;
   totalQuestions: number;
-  questions: Quiz[];
+  currentQuiz: Quiz | null;
+  quizList: QuizListItem[];
 }
 
 export default function QuizPage() {
@@ -33,35 +34,58 @@ export default function QuizPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [quizResult, setQuizResult] = useState<any>(null);
+  const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
 
-  // 테스트 데이터 로드 (useCallback으로 메모이제이션)
+  // 🔥 사용자가 선택한 답안을 저장 (임시 해결책)
+  const [userSelectedAnswer, setUserSelectedAnswer] = useState<string | null>(
+    null,
+  );
+
+  // 테스트 데이터 및 첫 번째 퀴즈 로드
   const loadQuizData = useCallback(async () => {
     setLoading(true);
     setError(null);
+
     try {
+      console.log("🔥 테스트 데이터 로딩 시작:", testId);
+
       // 1. 테스트 정보 가져오기
-      const testInfo = await testApi.getById(testId);
+      const testInfo: Test = await testApi.getById(testId);
+      console.log("✅ 테스트 정보:", testInfo);
 
       // 2. 퀴즈 리스트 가져오기
-      const quizList = await testApi.getQuizList(testId);
+      const quizList: QuizListItem[] = await testApi.getQuizList(testId);
+      console.log("✅ 퀴즈 리스트:", quizList);
 
       if (!quizList || quizList.length === 0) {
         throw new Error("이 테스트에는 문제가 없습니다.");
       }
 
-      // 3. 각 퀴즈 상세 정보 가져오기 (첫 번째 문제만 먼저)
-      const firstQuiz = await quizApi.getById(
-        testId,
-        quizList[0].quizNumber || 1,
-      );
+      // 3. 첫 번째 퀴즈 상세 정보 가져오기
+      const firstQuizItem = quizList[0];
+      console.log("🔥 첫 번째 퀴즈 아이템:", firstQuizItem);
 
-      setQuizData({
-        title: testInfo.title || `SQLD 테스트 #${testId}`,
+      if (!firstQuizItem || typeof firstQuizItem.quizNumber === "undefined") {
+        throw new Error("첫 번째 퀴즈 정보가 올바르지 않습니다.");
+      }
+
+      const firstQuiz: Quiz = await quizApi.getById(
+        testId,
+        firstQuizItem.quizNumber,
+      );
+      console.log("✅ 첫 번째 퀴즈 상세:", firstQuiz);
+
+      const finalQuizData = {
+        title: `SQLD 테스트 #${testId}`,
         totalQuestions: quizList.length,
-        questions: [{ ...firstQuiz, quizNumber: quizList[0].quizNumber || 1 }],
-      });
+        currentQuiz: firstQuiz,
+        quizList: quizList,
+      };
+
+      setQuizData(finalQuizData);
+      console.log("✅ 퀴즈 데이터 설정 완료", finalQuizData);
     } catch (err) {
+      console.error("❌ 퀴즈 데이터 로딩 에러:", err);
       const errorMessage = apiErrorHandler.getErrorMessage(err);
       setError(errorMessage);
     } finally {
@@ -74,18 +98,30 @@ export default function QuizPage() {
     try {
       if (!quizData) return;
 
-      const quizList = await testApi.getQuizList(testId);
-      const nextQuizNumber = quizList[questionIndex].quizNumber;
-      const nextQuiz = await quizApi.getById(testId, nextQuizNumber);
+      console.log(`🔥 다음 문제 로딩: ${questionIndex}`);
 
-      setQuizData((prev: QuizData | null) => ({
-        ...prev!,
-        questions: [
-          ...prev!.questions,
-          { ...nextQuiz, quizNumber: nextQuizNumber },
-        ],
-      }));
+      const nextQuizItem = quizData.quizList[questionIndex];
+      if (!nextQuizItem) {
+        throw new Error("다음 문제 정보를 찾을 수 없습니다.");
+      }
+
+      const nextQuiz: Quiz = await quizApi.getById(
+        testId,
+        nextQuizItem.quizNumber,
+      );
+
+      setQuizData((prev) =>
+        prev
+          ? {
+              ...prev,
+              currentQuiz: nextQuiz,
+            }
+          : null,
+      );
+
+      console.log("✅ 다음 문제 로딩 완료:", nextQuiz);
     } catch (err) {
+      console.error("❌ 다음 문제 로딩 에러:", err);
       apiErrorHandler.showError(err);
     }
   };
@@ -100,44 +136,52 @@ export default function QuizPage() {
   const handleAnswerSelect = (option: string) => {
     if (showAnswer) return;
     setSelectedAnswer(option);
+    setUserSelectedAnswer(option); // 🔥 사용자 선택 답안 저장
   };
 
   // 답안 제출
   const handleSubmitAnswer = async () => {
-    if (!selectedAnswer || !quizData) {
+    if (!selectedAnswer || !quizData?.currentQuiz) {
       alert("답을 선택해주세요.");
-      return;
-    }
-
-    const currentQuestion = quizData.questions[currentQuestionIndex];
-    if (!currentQuestion) {
-      alert("문제를 불러올 수 없습니다.");
       return;
     }
 
     setSubmitting(true);
     try {
+      console.log("🔥 답안 제출:", selectedAnswer);
+
       // 답안 제출
       await quizApi.submitAnswer(
         testId,
-        currentQuestion.quizNumber,
+        quizData.currentQuiz.quizNumber,
         selectedAnswer,
       );
 
       // 퀴즈 결과 가져오기 (정답, 해설 등)
-      const result = await quizApi.getResult(
+      const result: QuizResult = await quizApi.getResult(
         testId,
-        currentQuestion.quizNumber,
+        quizData.currentQuiz.quizNumber,
       );
-      setQuizResult(result);
+
+      // 🔥 사용자 답안과 정답 비교 (임시 해결책)
+      const correctedResult = {
+        ...result,
+        userAnswer: userSelectedAnswer || selectedAnswer,
+        isCorrect:
+          (userSelectedAnswer || selectedAnswer) === result.correctAnswer,
+      };
+
+      setQuizResult(correctedResult);
 
       // 정답 확인
-      if (result.isCorrect) {
-        setScore(score + 1);
+      if (correctedResult.isCorrect) {
+        setScore((prev) => prev + 1);
       }
 
       setShowAnswer(true);
+      console.log("✅ 답안 제출 완료:", correctedResult);
     } catch (err) {
+      console.error("❌ 답안 제출 에러:", err);
       apiErrorHandler.showError(err);
     } finally {
       setSubmitting(false);
@@ -148,16 +192,12 @@ export default function QuizPage() {
   const handleNextQuestion = async () => {
     setShowAnswer(false);
     setSelectedAnswer(null);
+    setUserSelectedAnswer(null); // 🔥 사용자 선택 답안 초기화
     setQuizResult(null);
 
     if (currentQuestionIndex < quizData!.totalQuestions - 1) {
       const nextIndex = currentQuestionIndex + 1;
-
-      // 다음 문제 데이터가 없으면 로드
-      if (!quizData!.questions[nextIndex]) {
-        await loadNextQuestion(nextIndex);
-      }
-
+      await loadNextQuestion(nextIndex);
       setCurrentQuestionIndex(nextIndex);
     } else {
       // 테스트 완료 처리
@@ -194,7 +234,7 @@ export default function QuizPage() {
     );
   }
 
-  if (!quizData) {
+  if (!quizData || !quizData.currentQuiz) {
     return (
       <div className="mt-20 text-center">
         <p className="text-xl text-slate-600">
@@ -203,23 +243,6 @@ export default function QuizPage() {
         <Link
           href="/quiz"
           className="mt-4 inline-block text-blue-500 hover:underline"
-        >
-          문제 목록으로 돌아가기
-        </Link>
-      </div>
-    );
-  }
-
-  const currentQuestion = quizData.questions[currentQuestionIndex];
-
-  // currentQuestion이 undefined인 경우 처리
-  if (!currentQuestion) {
-    return (
-      <div className="flex min-h-96 flex-col items-center justify-center">
-        <div className="mb-4 text-red-500">문제를 불러올 수 없습니다.</div>
-        <Link
-          href="/quiz"
-          className="rounded-md bg-blue-500 px-4 py-2 text-white transition-colors hover:bg-blue-600"
         >
           문제 목록으로 돌아가기
         </Link>
@@ -261,6 +284,8 @@ export default function QuizPage() {
     );
   }
 
+  const currentQuiz = quizData.currentQuiz;
+
   return (
     <div className="mx-auto mt-8 max-w-2xl rounded-lg bg-white p-6 shadow-xl md:p-8">
       <h1 className="mb-2 text-2xl font-bold text-slate-700">
@@ -268,6 +293,9 @@ export default function QuizPage() {
       </h1>
       <p className="mb-6 text-sm text-slate-500">
         문제 {currentQuestionIndex + 1} / {quizData.totalQuestions}
+        {currentQuiz?.multiple && (
+          <span className="ml-2 text-red-500">(다중 선택)</span>
+        )}
       </p>
 
       {/* 진행 바 */}
@@ -282,13 +310,31 @@ export default function QuizPage() {
 
       <div className="mb-6">
         <h2 className="mb-3 text-lg font-semibold leading-relaxed text-slate-800">
-          Q. {currentQuestion.question}
+          Q. {currentQuiz.question || "문제를 불러올 수 없습니다."}
         </h2>
 
+        {/* 🔥 문제 이미지가 있는 경우 표시 */}
+        {currentQuiz.contentImg && (
+          <div className="mb-4">
+            <img
+              src={currentQuiz.contentImg}
+              alt="문제 이미지"
+              className="mx-auto max-w-full rounded border"
+            />
+          </div>
+        )}
+
+        {/* 🔥 문제 추가 텍스트가 있는 경우 표시 */}
+        {currentQuiz.contentText && (
+          <div className="mb-4 rounded bg-gray-50 p-3 text-sm text-gray-700">
+            {currentQuiz.contentText}
+          </div>
+        )}
+
         {/* 객관식 문제 */}
-        {currentQuestion.options && currentQuestion.options.length > 0 && (
+        {currentQuiz.options && currentQuiz.options.length > 0 && (
           <div className="space-y-3">
-            {currentQuestion.options.map((option: string, index: number) => (
+            {currentQuiz.options.map((option: string, index: number) => (
               <button
                 key={index}
                 onClick={() => handleAnswerSelect(option.charAt(0))} // A, B, C, D
@@ -316,7 +362,7 @@ export default function QuizPage() {
         )}
 
         {/* 주관식 문제 */}
-        {(!currentQuestion.options || currentQuestion.options.length === 0) && (
+        {(!currentQuiz.options || currentQuiz.options.length === 0) && (
           <textarea
             value={selectedAnswer || ""}
             onChange={(e) => setSelectedAnswer(e.target.value)}
