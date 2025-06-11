@@ -15,3 +15,6 @@ export const quizAnswer = mysqlTable(
     }),
   ],
 );
+
+export type QuizAnswer = typeof quizAnswer.$inferSelect;
+export type QuizAnswerInsert = typeof quizAnswer.$inferInsert;

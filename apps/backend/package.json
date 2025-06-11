@@ -2,7 +2,8 @@
   "name": "backend",
   "private": true,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./schema": "./src/db/schema/index.ts"
   },
   "scripts": {
     "build": "nitro build",

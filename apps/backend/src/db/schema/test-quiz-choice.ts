@@ -11,3 +11,6 @@ export const testQuizChoice = mysqlTable(
   },
   (table) => [primaryKey({ columns: [table.testQuizId, table.userChoice] })],
 );
+
+export type TestQuizChoice = typeof testQuizChoice.$inferSelect;
+export type TestQuizChoiceInsert = typeof testQuizChoice.$inferInsert;

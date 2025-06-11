@@ -40,7 +40,7 @@ export default function Header() {
   const allNavLinks: NavLinkItem[] = [
     { href: "/quiz", label: "문제 목록", type: "link", requiresAuth: true },
     // { href: '/study-materials', label: '학습 자료', type: 'link' },
-    { href: "/mypage", label: "마이페이지", type: "link", requiresAuth: true },
+    { href: "/my-page", label: "마이페이지", type: "link", requiresAuth: true },
     { href: "/signin", label: "로그인", type: "link", guestOnly: true },
     { href: "/signup", label: "회원가입", type: "link", guestOnly: true },
     {

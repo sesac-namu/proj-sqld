@@ -35,8 +35,10 @@ export default async function RootLayout({
           NEXT_PUBLIC_API_URL={env.NEXT_PUBLIC_API_URL}
           NEXT_PUBLIC_SITE_URL={env.NEXT_PUBLIC_SITE_URL}
         >
-          <Header />
-          <main>{children}</main>
+          <div className="min-h-svh">
+            <Header />
+            <main className="h-full">{children}</main>
+          </div>
         </Config>
       </body>
     </html>

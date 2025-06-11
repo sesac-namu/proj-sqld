@@ -18,3 +18,6 @@ export const test = mysqlTable("test", {
       onDelete: "cascade",
     }),
 });
+
+export type Test = typeof test.$inferSelect;
+export type TestInsert = typeof test.$inferInsert;

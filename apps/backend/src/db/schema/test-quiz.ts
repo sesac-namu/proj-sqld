@@ -17,3 +17,6 @@ export const testQuiz = mysqlTable("test_quiz", {
   quizNumber: int("quiz_number"),
   solvedAt: datetime("solved_at"),
 });
+
+export type TestQuiz = typeof testQuiz.$inferSelect;
+export type TestQuizInsert = typeof testQuiz.$inferInsert;
