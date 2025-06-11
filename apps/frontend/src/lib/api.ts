@@ -1,6 +1,3 @@
-// src/lib/api.ts
-
-// 🔥🔥🔥🔥🔥 백엔드 응답 구조에 맞는 타입 정의들
 export interface User {
   id: string;
   name: string;
@@ -11,7 +8,6 @@ export interface User {
   updatedAt: string;
 }
 
-// 🔥 백엔드에서 실제로 보내주는 테스트 구조
 export interface Test {
   id: number;
   score: number | null;
@@ -21,7 +17,6 @@ export interface Test {
   userId: string;
 }
 
-// 🔥 프론트엔드에서 사용할 테스트 구조 (UI용)
 export interface TestUI {
   id: string;
   title?: string;
@@ -42,7 +37,6 @@ export interface QuizListItem {
   userChoices: unknown[];
 }
 
-// 🔥 백엔드에서 실제로 보내주는 퀴즈 상세 구조
 export interface QuizDetail {
   quizId: number;
   solvedAt: string | null;
@@ -58,7 +52,6 @@ export interface QuizDetail {
   multiple: boolean;
 }
 
-// 🔥 프론트엔드에서 사용할 퀴즈 구조
 export interface Quiz {
   id: number;
   quizNumber: number;
@@ -72,7 +65,6 @@ export interface Quiz {
   tags?: string;
 }
 
-// 🔥 백엔드 퀴즈 결과 API 응답 구조
 export interface QuizResultResponse {
   quiz: Array<{
     id: number;
@@ -99,7 +91,6 @@ export interface QuizResultResponse {
   answers: number[];
 }
 
-// 🔥 백엔드 테스트 결과 API 응답 구조
 export interface TestResultResponse {
   test: Test;
   quizList: Array<{
@@ -122,7 +113,6 @@ export interface TestResultResponse {
   }>;
 }
 
-// 🔥 프론트엔드에서 사용할 퀴즈 결과 구조
 export interface QuizResult {
   isCorrect: boolean;
   correctAnswer: string;
@@ -136,7 +126,6 @@ export interface QuizResult {
   };
 }
 
-// 🔥 프론트엔드에서 사용할 테스트 결과 구조
 export interface TestResult {
   test: Test;
   totalQuestions: number;
@@ -171,7 +160,6 @@ export interface ApiResponse<T> {
   success?: boolean;
 }
 
-// 🔥 기본 API 호출 함수
 async function apiCall<T>(url: string, options: RequestInit = {}): Promise<T> {
   try {
     console.log(`🚀 API 호출: ${options.method || "GET"} ${url}`);
@@ -217,7 +205,6 @@ async function apiCall<T>(url: string, options: RequestInit = {}): Promise<T> {
   }
 }
 
-// 🔥🔥🔥🔥🔥 사용자 관련 API
 export const userApi = {
   async getMe(): Promise<User> {
     const response = await apiCall<ApiResponse<User>>("/api/user/me");
@@ -225,28 +212,67 @@ export const userApi = {
   },
 };
 
-// 🔥🔥🔥🔥🔥 테스트 관련 API
 export const testApi = {
-  // 테스트 목록 가져오기
   async getList(): Promise<TestUI[]> {
     const response = await apiCall<ApiResponse<Test[]>>("/api/test");
     console.log("테스트 목록 원본 응답:", response);
 
-    // 🔥 백엔드 구조를 프론트엔드 UI 구조로 변환
-    const tests = response.data.map((test: Test) => ({
-      id: test.id.toString(),
-      title: `SQLD 테스트 #${test.id}`,
-      description: "SQLD 자격증 시험 대비 문제입니다.",
-      totalQuestions: undefined, // 퀴즈 리스트에서 별도로 가져와야 함
-      createdAt: test.createdAt,
-      isFinished: test.finishedAt !== null,
-      score: test.score,
-    }));
+    const testsWithRealStatus = await Promise.all(
+      response.data.map(async (test: Test): Promise<TestUI> => {
+        try {
+          console.log(`🔥 테스트 ${test.id} 퀴즈 리스트 확인 중...`);
 
-    return tests;
+          const quizListResponse = await apiCall<
+            ApiResponse<{ quizList: QuizListItem[] }>
+          >(`/api/test/${test.id}/quiz-list`);
+
+          const quizList = quizListResponse.data.quizList;
+          console.log(`테스트 ${test.id} 퀴즈 리스트:`, quizList);
+
+          const totalQuizzes = quizList.length;
+          const solvedQuizzes = quizList.filter(
+            (quiz) => quiz.solved === true,
+          ).length;
+          const isReallyFinished =
+            totalQuizzes > 0 && solvedQuizzes === totalQuizzes;
+
+          console.log(`✅ 테스트 ${test.id} 실제 완료 상태:`, {
+            총문제수: totalQuizzes,
+            푼문제수: solvedQuizzes,
+            백엔드_finishedAt: test.finishedAt,
+            백엔드_score: test.score,
+            실제_완료상태: isReallyFinished,
+          });
+
+          return {
+            id: test.id.toString(),
+            title: `SQLD 테스트 #${test.id}`,
+            description: "SQLD 자격증 시험 대비 문제입니다.",
+            totalQuestions: totalQuizzes,
+            createdAt: test.createdAt,
+            isFinished: isReallyFinished,
+            score: test.score,
+          } as TestUI;
+        } catch (error) {
+          console.warn(`❌ 테스트 ${test.id} 퀴즈 리스트 확인 실패:`, error);
+
+          return {
+            id: test.id.toString(),
+            title: `SQLD 테스트 #${test.id}`,
+            description: "SQLD 자격증 시험 대비 문제입니다.",
+            totalQuestions: undefined,
+            createdAt: test.createdAt,
+            isFinished: false,
+            score: test.score,
+          } as TestUI;
+        }
+      }),
+    );
+
+    console.log("✅ 최종 변환된 테스트 목록:", testsWithRealStatus);
+    return testsWithRealStatus;
   },
 
-  // 새 테스트 생성
   async create(): Promise<{ testId: number; createdAt: string }> {
     const response = await apiCall<
       ApiResponse<{ test: { testId: number; createdAt: string } }>
@@ -254,7 +280,6 @@ export const testApi = {
     return response.data.test;
   },
 
-  // 특정 테스트 정보 가져오기
   async getById(testId: string): Promise<Test> {
     const response = await apiCall<ApiResponse<{ test: Test }>>(
       `/api/test/${testId}`,
@@ -262,7 +287,6 @@ export const testApi = {
     return response.data.test;
   },
 
-  // 테스트 완료 여부 확인
   async isFinished(testId: string): Promise<{ isFinished: boolean }> {
     const response = await apiCall<ApiResponse<{ isFinished: boolean }>>(
       `/api/test/${testId}/is-finished`,
@@ -270,7 +294,6 @@ export const testApi = {
     return response.data;
   },
 
-  // 퀴즈 리스트 가져오기
   async getQuizList(testId: string): Promise<QuizListItem[]> {
     const response = await apiCall<ApiResponse<{ quizList: QuizListItem[] }>>(
       `/api/test/${testId}/quiz-list`,
@@ -279,24 +302,20 @@ export const testApi = {
     return response.data.quizList;
   },
 
-  // 테스트 결과 가져오기
   async getResult(testId: string): Promise<TestResult> {
     const response = await apiCall<ApiResponse<TestResultResponse>>(
       `/api/test/${testId}/result`,
     );
     const resultData = response.data;
 
-    // 🔥 백엔드 결과를 프론트엔드 구조로 변환
     const quizResults = resultData.quizList.map((item) => {
       const quiz = item.quiz;
 
-      // 🔥 안전한 정답 인덱스 추출
       const correctAnswerIndex =
         item.answers && Array.isArray(item.answers) && item.answers.length > 0
           ? item.answers[0]
           : 1;
 
-      // 🔥 타입 가드로 안전성 확보
       const safeAnswerIndex: number =
         typeof correctAnswerIndex === "number" &&
         correctAnswerIndex >= 1 &&
@@ -304,7 +323,6 @@ export const testApi = {
           ? correctAnswerIndex
           : 1;
 
-      // 🔥 안전한 정답 변환
       const answerLetters: readonly string[] = ["A", "B", "C", "D"];
       const correctAnswerLetter: string = answerLetters[
         safeAnswerIndex - 1
@@ -312,9 +330,9 @@ export const testApi = {
 
       return {
         quiz: quiz,
-        isCorrect: false, // TODO: userChoices와 비교
+        isCorrect: false,
         correctAnswer: correctAnswerLetter,
-        userAnswer: "", // TODO: userChoices에서 추출
+        userAnswer: "",
         explanation: quiz.answer_explanation.replace(/^해설:\s*/, ""),
       };
     });
@@ -334,7 +352,6 @@ export const testApi = {
     };
   },
 
-  // 테스트 완료 처리
   async finish(
     testId: string,
     data?: Record<string, unknown>,
@@ -347,9 +364,7 @@ export const testApi = {
   },
 };
 
-// 🔥🔥🔥🔥🔥 퀴즈 관련 API
 export const quizApi = {
-  // 특정 퀴즈 정보 가져오기
   async getById(testId: string, quizNumber: number): Promise<Quiz> {
     const response = await apiCall<
       ApiResponse<{ quiz: QuizDetail; choices: unknown[] }>
@@ -358,7 +373,6 @@ export const quizApi = {
 
     const quizDetail = response.data.quiz;
 
-    // 🔥 백엔드 구조를 프론트엔드 구조로 변환
     const quiz: Quiz = {
       id: quizDetail.quizId,
       quizNumber: quizNumber,
@@ -370,7 +384,7 @@ export const quizApi = {
         `B. ${quizDetail.choices2}`,
         `C. ${quizDetail.choices3}`,
         `D. ${quizDetail.choices4}`,
-      ].filter((choice) => choice.length > 3), // 빈 선택지 제거
+      ].filter((choice) => choice.length > 3),
       questionType: quizDetail.multiple ? "multiple" : "single",
       category: quizDetail.category,
       multiple: quizDetail.multiple,
@@ -381,7 +395,6 @@ export const quizApi = {
     return quiz;
   },
 
-  // 퀴즈 답안 제출
   async submitAnswer(
     testId: string,
     quizNumber: number,
@@ -394,7 +407,6 @@ export const quizApi = {
     return response;
   },
 
-  // 퀴즈 결과 가져오기
   async getResult(testId: string, quizNumber: number): Promise<QuizResult> {
     const response = await apiCall<ApiResponse<QuizResultResponse>>(
       `/api/test/${testId}/${quizNumber}/result`,
@@ -403,7 +415,6 @@ export const quizApi = {
 
     const resultData = response.data;
 
-    // 🔥 데이터 유효성 검사
     if (
       !resultData.quiz ||
       !Array.isArray(resultData.quiz) ||
@@ -427,7 +438,6 @@ export const quizApi = {
       throw new Error("첫 번째 퀴즈 데이터가 없습니다.");
     }
 
-    // 🔥 안전한 정답 인덱스 처리 + 타입 강제 지정
     const safeAnswerIndex: number =
       typeof firstAnswerIndex === "number" &&
       firstAnswerIndex >= 1 &&
@@ -435,23 +445,20 @@ export const quizApi = {
         ? firstAnswerIndex
         : 1;
 
-    // 🔥 완전히 안전한 정답 문자 변환
     const answerLetters: readonly string[] = ["A", "B", "C", "D"];
     const correctAnswerLetter: string = answerLetters[
       safeAnswerIndex - 1
     ] as string;
 
-    // TODO: userChoices에서 사용자 답안 추출
     const userAnswer = "";
 
-    // 🔥 해설에서 "해설:" 접두사 제거
     const cleanExplanation: string = firstQuiz.answer_explanation.replace(
       /^해설:\s*/,
       "",
     );
 
     const quizResult: QuizResult = {
-      isCorrect: false, // TODO: 사용자 답안과 정답 비교
+      isCorrect: false,
       correctAnswer: correctAnswerLetter,
       userAnswer: userAnswer,
       explanation: cleanExplanation,
@@ -473,7 +480,6 @@ export const quizApi = {
   },
 };
 
-// 🔥🔥🔥🔥🔥 에러 처리 헬퍼
 export const apiErrorHandler = {
   getErrorMessage(error: unknown): string {
     if (error instanceof Error) {
@@ -504,7 +510,6 @@ export const apiErrorHandler = {
   },
 };
 
-// 🔥🔥🔥🔥🔥 백엔드 상태 확인 함수
 export const healthCheck = {
   async checkServer(): Promise<boolean> {
     try {

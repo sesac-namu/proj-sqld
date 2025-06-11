@@ -1,5 +1,3 @@
-// src/hooks/useApi.ts
-
 import { useCallback, useState } from "react";
 import {
   apiErrorHandler,
@@ -15,7 +13,6 @@ import {
   userApi,
 } from "@/lib/api";
 
-// 🔥🔥🔥🔥🔥 기본 API 상태 관리 훅
 function useApiState<T>() {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
@@ -46,7 +43,6 @@ function useApiState<T>() {
   return { data, loading, error, execute, reset };
 }
 
-// 🔥🔥🔥🔥🔥 사용자 정보 훅
 export function useUser() {
   const { data: user, loading, error, execute } = useApiState<User>();
 
@@ -57,7 +53,6 @@ export function useUser() {
   return { user, loading, error, fetchUser };
 }
 
-// 🔥🔥🔥🔥🔥 테스트 목록 훅 (TestUI 타입 사용)
 export function useTestList() {
   const { data: tests, loading, error, execute } = useApiState<TestUI[]>();
 
@@ -66,9 +61,8 @@ export function useTestList() {
   }, [execute]);
 
   const createTest = useCallback(async () => {
-    // 새 테스트 생성은 별도의 API 호출이므로 execute를 사용하지 않음
     const newTest = await testApi.create();
-    // 새 테스트 생성 후 목록 새로고침
+
     await fetchTests();
     return newTest;
   }, [fetchTests]);
@@ -76,12 +70,10 @@ export function useTestList() {
   return { tests, loading, error, fetchTests, createTest };
 }
 
-// 🔥🔥🔥🔥🔥 특정 테스트 훅 - 각 기능별로 분리된 상태 관리
 export function useTest(testId: string) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 각각 별도의 상태 관리
   const [test, setTest] = useState<Test | null>(null);
   const [isFinished, setIsFinished] = useState<{ isFinished: boolean } | null>(
     null,
@@ -191,13 +183,11 @@ export function useTest(testId: string) {
   };
 }
 
-// 🔥🔥🔥🔥🔥 퀴즈 훅 - Quiz 타입 사용
 export function useQuiz(testId: string, quizNumber: number) {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Quiz 타입으로 상태 관리
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
 
@@ -206,7 +196,6 @@ export function useQuiz(testId: string, quizNumber: number) {
     setLoading(true);
     setError(null);
     try {
-      // API에서 Quiz 타입으로 변환된 데이터를 받음
       const result = await quizApi.getById(testId, quizNumber);
       setQuiz(result);
       return result;
@@ -266,7 +255,6 @@ export function useQuiz(testId: string, quizNumber: number) {
   };
 }
 
-// 🔥🔥🔥🔥🔥 간단한 API 호출 훅 (일회성 호출용)
 export function useApiCall() {
   const [loading, setLoading] = useState(false);
 
