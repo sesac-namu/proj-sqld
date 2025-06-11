@@ -209,7 +209,8 @@ export function useQuiz(testId: string, quizNumber: number) {
   }, [testId, quizNumber]);
 
   const submitAnswer = useCallback(
-    async (answer: string) => {
+    async (answer: number) => {
+      // 🔥 string → number로 변경
       if (!testId || !quizNumber || !answer) return;
 
       setSubmitting(true);

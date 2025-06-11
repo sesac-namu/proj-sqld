@@ -1,6 +1,7 @@
 // app/(authorized)/quiz/[id]/page.tsx
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -27,7 +28,8 @@ export default function QuizPage() {
 
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  // const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null); // 🔥 string → number
   const [showAnswer, setShowAnswer] = useState(false);
   const [score, setScore] = useState(0);
   const [isQuizFinished, setIsQuizFinished] = useState(false);
@@ -36,10 +38,16 @@ export default function QuizPage() {
   const [submitting, setSubmitting] = useState(false);
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
 
-  // 🔥 사용자가 선택한 답안을 저장 (임시 해결책)
-  const [userSelectedAnswer, setUserSelectedAnswer] = useState<string | null>(
+  // 🔥 userAnswers 상태 추가 (타입 명시)
+  const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
+
+  // 🔥 사용자가 선택한 답안을 저장 (임시 해결책?????)
+  // const [userSelectedAnswer, setUserSelectedAnswer] = useState<string | null>(
+  //   null,
+  // );
+  const [userSelectedAnswer, setUserSelectedAnswer] = useState<number | null>(
     null,
-  );
+  ); // string → number
 
   // 테스트 데이터 및 첫 번째 퀴즈 로드
   const loadQuizData = useCallback(async () => {
@@ -135,8 +143,22 @@ export default function QuizPage() {
   // 답안 선택
   const handleAnswerSelect = (option: string) => {
     if (showAnswer) return;
-    setSelectedAnswer(option);
-    setUserSelectedAnswer(option); // 🔥 사용자 선택 답안 저장
+
+    // 🔥 문자열을 숫자로 변환 (A,B,C,D → 1,2,3,4)
+    let answerNumber: number;
+    if (option === "A") answerNumber = 1;
+    else if (option === "B") answerNumber = 2;
+    else if (option === "C") answerNumber = 3;
+    else if (option === "D") answerNumber = 4;
+    else {
+      // 이미 숫자인 경우 (1,2,3,4)
+      answerNumber = parseInt(option, 10);
+    }
+
+    setSelectedAnswer(answerNumber);
+    setUserSelectedAnswer(answerNumber);
+
+    console.log("🔥 선택한 답안:", option, "→", answerNumber);
   };
 
   // 답안 제출
@@ -148,9 +170,16 @@ export default function QuizPage() {
 
     setSubmitting(true);
     try {
-      console.log("🔥 답안 제출:", selectedAnswer);
+      console.log("🔥 답안 제출:", selectedAnswer, typeof selectedAnswer);
 
-      // 답안 제출
+      // 🔥 클라이언트 사이드에 답안 저장 (타입 에러 해결)
+      const currentQuestionNumber = quizData.currentQuiz.quizNumber;
+      setUserAnswers((prev: Record<number, string>) => ({
+        ...prev,
+        [currentQuestionNumber]: selectedAnswer.toString(),
+      }));
+
+      // 🔥 숫자로 답안 제출
       await quizApi.submitAnswer(
         testId,
         quizData.currentQuiz.quizNumber,
@@ -163,12 +192,12 @@ export default function QuizPage() {
         quizData.currentQuiz.quizNumber,
       );
 
-      // 🔥 사용자 답안과 정답 비교 (임시 해결책)
+      // 🔥 사용자 답안과 정답 비교
+      const correctAnswerNum = parseInt(result.correctAnswer, 10);
       const correctedResult = {
         ...result,
-        userAnswer: userSelectedAnswer || selectedAnswer,
-        isCorrect:
-          (userSelectedAnswer || selectedAnswer) === result.correctAnswer,
+        userAnswer: selectedAnswer.toString(),
+        isCorrect: selectedAnswer === correctAnswerNum,
       };
 
       setQuizResult(correctedResult);
@@ -192,7 +221,6 @@ export default function QuizPage() {
   const handleNextQuestion = async () => {
     setShowAnswer(false);
     setSelectedAnswer(null);
-    setUserSelectedAnswer(null); // 🔥 사용자 선택 답안 초기화
     setQuizResult(null);
 
     if (currentQuestionIndex < quizData!.totalQuestions - 1) {
@@ -316,9 +344,11 @@ export default function QuizPage() {
         {/* 🔥 문제 이미지가 있는 경우 표시 */}
         {currentQuiz.contentImg && (
           <div className="mb-4">
-            <img
+            <Image
               src={currentQuiz.contentImg}
               alt="문제 이미지"
+              width={800}
+              height={600}
               className="mx-auto max-w-full rounded border"
             />
           </div>
@@ -334,42 +364,49 @@ export default function QuizPage() {
         {/* 객관식 문제 */}
         {currentQuiz.options && currentQuiz.options.length > 0 && (
           <div className="space-y-3">
-            {currentQuiz.options.map((option: string, index: number) => (
-              <button
-                key={index}
-                onClick={() => handleAnswerSelect(option.charAt(0))} // A, B, C, D
-                disabled={showAnswer}
-                className={`block w-full rounded-md border p-3 text-left transition-all ${
-                  selectedAnswer === option.charAt(0)
-                    ? "border-blue-400 bg-blue-100 ring-2 ring-blue-300"
-                    : "border-slate-300 bg-white hover:bg-slate-50"
-                } ${
-                  showAnswer && quizResult?.correctAnswer === option.charAt(0)
-                    ? "border-green-500 bg-green-100 font-semibold text-green-700"
-                    : ""
-                } ${
-                  showAnswer &&
-                  selectedAnswer === option.charAt(0) &&
-                  !quizResult?.isCorrect
-                    ? "border-red-500 bg-red-100 text-red-700"
-                    : ""
-                } ${showAnswer ? "cursor-not-allowed" : "cursor-pointer"}`}
-              >
-                {option}
-              </button>
-            ))}
+            {currentQuiz.options.map((option: string, index: number) => {
+              const answerNumber = index + 1; // 1, 2, 3, 4
+
+              return (
+                <button
+                  key={index}
+                  onClick={() => handleAnswerSelect(answerNumber.toString())} // 🔥 숫자를 문자열로 전달
+                  disabled={showAnswer}
+                  className={`block w-full rounded-md border p-3 text-left transition-all ${
+                    selectedAnswer === answerNumber // 🔥 숫자끼리 비교
+                      ? "border-blue-400 bg-blue-100 ring-2 ring-blue-300"
+                      : "border-slate-300 bg-white hover:bg-slate-50"
+                  } ${
+                    showAnswer &&
+                    quizResult?.correctAnswer === answerNumber.toString() // 🔥 문자열과 비교
+                      ? "border-green-500 bg-green-100 font-semibold text-green-700"
+                      : ""
+                  } ${
+                    showAnswer &&
+                    selectedAnswer === answerNumber &&
+                    !quizResult?.isCorrect
+                      ? "border-red-500 bg-red-100 text-red-700"
+                      : ""
+                  } ${showAnswer ? "cursor-not-allowed" : "cursor-pointer"}`}
+                >
+                  {option}
+                </button>
+              );
+            })}
           </div>
         )}
 
         {/* 주관식 문제 */}
         {(!currentQuiz.options || currentQuiz.options.length === 0) && (
-          <textarea
+          <input
+            type="number"
+            min="1"
+            max="4"
             value={selectedAnswer || ""}
-            onChange={(e) => setSelectedAnswer(e.target.value)}
+            onChange={(e) => setSelectedAnswer(parseInt(e.target.value, 10))}
             disabled={showAnswer}
-            placeholder="답안을 입력해주세요..."
+            placeholder="답안을 입력해주세요 (1, 2, 3, 4)"
             className="w-full rounded-lg border p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-            rows={4}
           />
         )}
       </div>

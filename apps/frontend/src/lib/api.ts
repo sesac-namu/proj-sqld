@@ -398,15 +398,32 @@ export const quizApi = {
   async submitAnswer(
     testId: string,
     quizNumber: number,
-    answer: string,
+    answer: number, // 🔥 string → number로 변경
   ): Promise<unknown> {
+    console.log("🔥 답안 제출:", {
+      testId,
+      quizNumber,
+      answer,
+      answerType: typeof answer,
+    });
+
+    // 🔥 number 타입으로 전송
+    const requestData = {
+      answer: answer, // 숫자 그대로 전송
+    };
+
+    console.log("🔥 전송할 데이터:", requestData);
+
     const response = await apiCall(`/api/test/${testId}/${quizNumber}`, {
       method: "POST",
-      body: JSON.stringify({ answer }),
+      body: JSON.stringify(requestData),
     });
+
+    console.log("✅ 답안 제출 성공:", response);
     return response;
   },
 
+  // 🔥 기존 api.ts 파일에서 quizApi.getResult() 함수만 이 코드로 교체하세요
   async getResult(testId: string, quizNumber: number): Promise<QuizResult> {
     const response = await apiCall<ApiResponse<QuizResultResponse>>(
       `/api/test/${testId}/${quizNumber}/result`,
@@ -415,6 +432,7 @@ export const quizApi = {
 
     const resultData = response.data;
 
+    // 🔥 데이터 유효성 검사
     if (
       !resultData.quiz ||
       !Array.isArray(resultData.quiz) ||
@@ -438,6 +456,7 @@ export const quizApi = {
       throw new Error("첫 번째 퀴즈 데이터가 없습니다.");
     }
 
+    // 🔥 안전한 정답 인덱스 처리
     const safeAnswerIndex: number =
       typeof firstAnswerIndex === "number" &&
       firstAnswerIndex >= 1 &&
@@ -445,22 +464,42 @@ export const quizApi = {
         ? firstAnswerIndex
         : 1;
 
+    // 🔥 사용자 답안 추출
+    let userAnswerIndex: number | null = null;
+    if (
+      resultData.userChoices &&
+      Array.isArray(resultData.userChoices) &&
+      resultData.userChoices.length > 0
+    ) {
+      userAnswerIndex =
+        typeof resultData.userChoices[0] === "number"
+          ? resultData.userChoices[0]
+          : null;
+    }
+
+    // 🔥 A, B, C, D 형태로 변환
     const answerLetters: readonly string[] = ["A", "B", "C", "D"];
     const correctAnswerLetter: string = answerLetters[
       safeAnswerIndex - 1
     ] as string;
+    const userAnswerLetter: string = userAnswerIndex
+      ? (answerLetters[userAnswerIndex - 1] as string)
+      : "";
 
-    const userAnswer = "";
+    // 🔥 정답 확인
+    const isCorrect =
+      userAnswerIndex !== null && userAnswerIndex === safeAnswerIndex;
 
+    // 🔥 해설에서 "해설:" 접두사 제거
     const cleanExplanation: string = firstQuiz.answer_explanation.replace(
       /^해설:\s*/,
       "",
     );
 
     const quizResult: QuizResult = {
-      isCorrect: false,
-      correctAnswer: correctAnswerLetter,
-      userAnswer: userAnswer,
+      isCorrect: isCorrect,
+      correctAnswer: correctAnswerLetter, // "A", "B", "C", "D"
+      userAnswer: userAnswerLetter, // "A", "B", "C", "D" 또는 ""
       explanation: cleanExplanation,
       quiz: {
         id: firstQuiz.id,
