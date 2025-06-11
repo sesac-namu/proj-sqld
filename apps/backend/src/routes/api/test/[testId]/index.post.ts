@@ -30,19 +30,16 @@ export default defineEventHandler({
       });
     }
 
-    const testQuizList = db
+    const tq = db
       .select()
       .from(testQuiz)
       .where(eq(testQuiz.testId, testId))
-      .as("test_quiz_list");
+      .as("tq");
 
-    const res = await db
-      .select({
-        testQuizId: testQuizList.id,
-        quizId: quiz.id,
-      })
-      .from(testQuizList)
-      .innerJoin(quiz, eq(testQuizList.quizId, quiz.id));
+    const quizList = await db
+      .select()
+      .from(tq)
+      .leftJoin(quiz, eq(tq.quizId, quiz.id));
 
     const quizAnswers = await db
       .select()
@@ -50,7 +47,7 @@ export default defineEventHandler({
       .where(
         inArray(
           quizAnswer.quizId,
-          res.map((q) => q.quizId),
+          quizList.map((v) => v.quiz.id),
         ),
       );
 
@@ -60,22 +57,24 @@ export default defineEventHandler({
       .where(
         inArray(
           testQuizChoice.testQuizId,
-          res.map((q) => q.testQuizId),
+          quizList.map((q) => q.tq.id),
         ),
       );
 
-    const quizList = res
+    const quizListWithAnswers = quizList
       .map((tq) => ({
-        ...tq,
+        id: tq.tq.id,
+        quizId: tq.quiz.id,
+        quizNumber: tq.tq.quizNumber,
         answers: quizAnswers
-          .filter((a) => a.quizId === tq.quizId)
+          .filter((a) => a.quizId === tq.quiz.id)
           .map((a) => a.answer),
         userChoices: userChoices
-          .filter((c) => c.testQuizId === tq.testQuizId)
+          .filter((c) => c.testQuizId === tq.tq.id)
           .map((c) => c.userChoice),
       }))
       .map((q) => ({
-        id: q.testQuizId,
+        ...q,
         correct: q.answers.every((a, i) => a === q.userChoices[i]),
       }));
 
@@ -83,10 +82,10 @@ export default defineEventHandler({
       await tx.update(test).set({
         updatedAt: sql`CURRENT_TIMESTAMP`,
         finishedAt: sql`CURRENT_TIMESTAMP`,
-        score: quizList.filter((q) => q.correct).length * 2,
+        score: quizListWithAnswers.filter((q) => q.correct).length * 2,
       });
 
-      for (const q of quizList) {
+      for (const q of quizListWithAnswers) {
         await tx
           .update(testQuiz)
           .set({
@@ -96,10 +95,11 @@ export default defineEventHandler({
       }
     });
 
+    const score = quizListWithAnswers.filter((q) => q.correct).length * 2;
+
     return {
       ok: true,
-      quizList,
-      userChoices,
+      score,
     };
   },
 });

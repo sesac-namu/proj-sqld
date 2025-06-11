@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useApiCall, useQuiz } from "@/hooks/useApi";
+import { quizApi } from "@/lib/api";
 
 export default function TestPage() {
   // 상태들
@@ -191,13 +193,7 @@ export default function TestPage() {
     setLoading(true);
 
     for (let i = 1; i < 51; ++i) {
-      await fetch(`/api/test/${testId}/${i}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ answer: 1 }), // 예시로 A 답안 제출
-      });
+      await quizApi.submitAnswer(testId, i, [1]);
     }
 
     // await fetch(`/api/test/${testId}`, {
