@@ -16,7 +16,7 @@ export default function QuizListPage() {
     try {
       console.log("🔥 fetchTests 시작");
       const data = await testApi.getList();
-      console.log("🔥 받은 테스트 데이터:", data);
+      console.log("🔥 받은 시험지 데이터:", data);
 
       data.forEach((test) => {
         console.log(
@@ -38,8 +38,8 @@ export default function QuizListPage() {
     setCreating(true);
     try {
       const newTestData = await testApi.create();
-      console.log("생성된 테스트:", newTestData);
-      alert(`새 테스트가 생성되었습니다! (ID: ${newTestData.testId})`);
+      console.log("생성된 시험지:", newTestData);
+      alert(`새 시험지가 생성되었습니다! (ID: ${newTestData.testId})`);
 
       await fetchTests();
     } catch (err) {
@@ -58,7 +58,7 @@ export default function QuizListPage() {
     return (
       <div className="flex min-h-96 items-center justify-center">
         <div className="text-lg text-slate-600">
-          테스트 목록을 불러오는 중...
+          시험지 목록을 불러오는 중...
         </div>
       </div>
     );
@@ -86,9 +86,9 @@ export default function QuizListPage() {
         <button
           onClick={createNewTest}
           disabled={creating}
-          className="rounded-lg bg-green-500 px-6 py-2 text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg bg-green-500 px-6 py-2 font-bold text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {creating ? "생성 중..." : "새 테스트 시작"}
+          {creating ? "생성 중..." : "새 시험지 만들기"}
         </button>
       </div>
 
@@ -113,7 +113,7 @@ export default function QuizListPage() {
               className="rounded-lg border bg-white p-6 shadow-md transition-shadow hover:shadow-xl"
             >
               <h2 className="mb-2 text-xl font-semibold text-slate-800">
-                {test.title || `SQLD 테스트 #${test.id}`}
+                {test.title || `SQLD 시험지 #${test.id}`}
               </h2>
               {/* <p className="mb-4 text-sm text-slate-600">
                 {test.description || "SQLD 자격증 시험 대비 문제입니다."}
@@ -174,7 +174,7 @@ export default function QuizListPage() {
                     href={`/quiz/${test.id}/result`}
                     className="rounded-md bg-purple-500 px-3 py-2 text-sm text-white transition-colors hover:bg-purple-600"
                   >
-                    결과
+                    시험 결과
                   </Link>
                 )}
               </div>
@@ -188,7 +188,7 @@ export default function QuizListPage() {
               disabled={creating}
               className="rounded-lg bg-green-500 px-6 py-2 text-white transition-colors hover:bg-green-600 disabled:opacity-50"
             >
-              {creating ? "생성 중..." : "첫 번째 테스트 만들기"}
+              {creating ? "생성 중..." : "첫 번째 시험지 만들기"}
             </button>
           </div>
         )}
