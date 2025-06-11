@@ -1,4 +1,17 @@
-export default function MyPageStatistics() {
+import { headers } from "next/headers";
+import { serverFetch } from "@/lib/fetch";
+
+export default async function MyPageStatistics() {
+  const header = await headers();
+  const [finishedTests, answerRate] = await Promise.all([
+    serverFetch<number>("/api/test/stats/finished", {
+      headers: header,
+    }),
+    serverFetch<number>("/api/test/stats/answer-rate", {
+      headers: header,
+    }),
+  ]);
+
   return (
     <div className="rounded-xl border border-white/20 bg-white/80 p-6 shadow-xl backdrop-blur-sm">
       <h3 className="mb-6 flex items-center text-lg font-bold text-gray-800">
@@ -23,9 +36,11 @@ export default function MyPageStatistics() {
         <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-cyan-50 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-blue-600">0</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {finishedTests.data || 0}회
+              </div>
               <div className="text-sm font-medium text-blue-600">
-                완료한 퀴즈
+                완료한 모의고사
               </div>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100">
@@ -49,7 +64,9 @@ export default function MyPageStatistics() {
         <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-emerald-600">0%</div>
+              <div className="text-2xl font-bold text-emerald-600">
+                {(answerRate.data || 0) * 100}%
+              </div>
               <div className="text-sm font-medium text-emerald-600">정답률</div>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100">

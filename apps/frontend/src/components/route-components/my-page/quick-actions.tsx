@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function MyPageQuickAction() {
   return (
     <div className="rounded-xl border border-white/20 bg-white/80 p-6 shadow-xl backdrop-blur-sm">
@@ -20,7 +22,10 @@ export default function MyPageQuickAction() {
         퀵 액션
       </h3>
       <div className="space-y-3">
-        <button className="flex w-full items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-4 py-3 font-medium text-white transition-all duration-200 hover:from-indigo-600 hover:to-purple-700">
+        <Link
+          href="/quiz"
+          className="flex w-full items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-4 py-3 font-medium text-white transition-all duration-200 hover:from-indigo-600 hover:to-purple-700"
+        >
           <svg
             className="h-4 w-4"
             fill="none"
@@ -35,7 +40,7 @@ export default function MyPageQuickAction() {
             />
           </svg>
           <span>퀴즈 풀기</span>
-        </button>
+        </Link>
         <button className="flex w-full items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-3 font-medium text-white transition-all duration-200 hover:from-emerald-600 hover:to-teal-700">
           <svg
             className="h-4 w-4"

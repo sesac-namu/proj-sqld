@@ -209,12 +209,12 @@ export function useQuiz(testId: string, quizNumber: number) {
   }, [testId, quizNumber]);
 
   const submitAnswer = useCallback(
-    async (answer: string) => {
-      if (!testId || !quizNumber || !answer) return;
+    async (answers: number[]) => {
+      if (!testId || !quizNumber || answers.length === 0) return;
 
       setSubmitting(true);
       try {
-        const result = await quizApi.submitAnswer(testId, quizNumber, answer);
+        const result = await quizApi.submitAnswer(testId, quizNumber, answers);
         return result;
       } catch (err) {
         apiErrorHandler.showError(err);

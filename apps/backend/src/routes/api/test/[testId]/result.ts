@@ -3,7 +3,7 @@ import { db } from "~/db";
 import { quiz, quizAnswer, test, testQuiz, testQuizChoice } from "~/db/schema";
 
 export default defineEventHandler({
-  onRequest: [requireAuth],
+  // onRequest: [requireAuth],
   handler: async (event) => {
     const testId = Number.parseInt(getRouterParam(event, "testId"));
 

@@ -24,23 +24,16 @@ interface QuizData {
 export default function QuizPage() {
   const params = useParams();
   const testId = params.id as string;
-
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [showAnswer, setShowAnswer] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState<number[]>([]);
   const [score, setScore] = useState(0);
   const [isQuizFinished, setIsQuizFinished] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
 
   // 🔥 사용자가 선택한 답안을 저장 (임시 해결책)
-  const [userSelectedAnswer, setUserSelectedAnswer] = useState<string | null>(
-    null,
-  );
-
   // 테스트 데이터 및 첫 번째 퀴즈 로드
   const loadQuizData = useCallback(async () => {
     setLoading(true);
@@ -131,69 +124,26 @@ export default function QuizPage() {
       loadQuizData();
     }
   }, [testId, loadQuizData]);
-
   // 답안 선택
-  const handleAnswerSelect = (option: string) => {
-    if (showAnswer) return;
-    setSelectedAnswer(option);
-    setUserSelectedAnswer(option); // 🔥 사용자 선택 답안 저장
-  };
+  const handleAnswerSelect = (answer: number) => {
+    if (!quizData?.currentQuiz) return;
 
-  // 답안 제출
-  const handleSubmitAnswer = async () => {
-    if (!selectedAnswer || !quizData?.currentQuiz) {
-      alert("답을 선택해주세요.");
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      console.log("🔥 답안 제출:", selectedAnswer);
-
-      // 답안 제출
-      await quizApi.submitAnswer(
-        testId,
-        quizData.currentQuiz.quizNumber,
-        selectedAnswer,
-      );
-
-      // 퀴즈 결과 가져오기 (정답, 해설 등)
-      const result: QuizResult = await quizApi.getResult(
-        testId,
-        quizData.currentQuiz.quizNumber,
-      );
-
-      // 🔥 사용자 답안과 정답 비교 (임시 해결책)
-      const correctedResult = {
-        ...result,
-        userAnswer: userSelectedAnswer || selectedAnswer,
-        isCorrect:
-          (userSelectedAnswer || selectedAnswer) === result.correctAnswer,
-      };
-
-      setQuizResult(correctedResult);
-
-      // 정답 확인
-      if (correctedResult.isCorrect) {
-        setScore((prev) => prev + 1);
+    if (quizData.currentQuiz.multiple) {
+      // 다중 선택인 경우
+      if (selectedAnswer.includes(answer)) {
+        setSelectedAnswer(selectedAnswer.filter((a) => a !== answer));
+      } else {
+        setSelectedAnswer([...selectedAnswer, answer]);
       }
-
-      setShowAnswer(true);
-      console.log("✅ 답안 제출 완료:", correctedResult);
-    } catch (err) {
-      console.error("❌ 답안 제출 에러:", err);
-      apiErrorHandler.showError(err);
-    } finally {
-      setSubmitting(false);
+    } else {
+      // 단일 선택인 경우
+      setSelectedAnswer([answer]);
     }
   };
 
   // 다음 문제로
   const handleNextQuestion = async () => {
-    setShowAnswer(false);
-    setSelectedAnswer(null);
-    setUserSelectedAnswer(null); // 🔥 사용자 선택 답안 초기화
-    setQuizResult(null);
+    setSelectedAnswer([]);
 
     if (currentQuestionIndex < quizData!.totalQuestions - 1) {
       const nextIndex = currentQuestionIndex + 1;
@@ -207,6 +157,30 @@ export default function QuizPage() {
       } catch (err) {
         apiErrorHandler.showError(err);
       }
+    }
+  };
+
+  const handleSubmitAnswer = async () => {
+    if (!selectedAnswer.length || !quizData?.currentQuiz) {
+      alert("답을 선택해주세요.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      // 답안 제출
+      (await quizApi.submitAnswer(
+        testId,
+        quizData.currentQuiz.quizNumber,
+        selectedAnswer,
+      )) as QuizResult;
+
+      await handleNextQuestion();
+    } catch (err) {
+      console.error("❌ 답안 제출 에러:", err);
+      apiErrorHandler.showError(err);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -312,7 +286,6 @@ export default function QuizPage() {
         <h2 className="mb-3 text-lg font-semibold leading-relaxed text-slate-800">
           Q. {currentQuiz.question || "문제를 불러올 수 없습니다."}
         </h2>
-
         {/* 🔥 문제 이미지가 있는 경우 표시 */}
         {currentQuiz.contentImg && (
           <div className="mb-4">
@@ -323,79 +296,60 @@ export default function QuizPage() {
             />
           </div>
         )}
-
         {/* 🔥 문제 추가 텍스트가 있는 경우 표시 */}
         {currentQuiz.contentText && (
           <div className="mb-4 rounded bg-gray-50 p-3 text-sm text-gray-700">
             {currentQuiz.contentText}
           </div>
-        )}
-
+        )}{" "}
         {/* 객관식 문제 */}
-        {currentQuiz.options && currentQuiz.options.length > 0 && (
-          <div className="space-y-3">
-            {currentQuiz.options.map((option: string, index: number) => (
-              <button
-                key={index}
-                onClick={() => handleAnswerSelect(option.charAt(0))} // A, B, C, D
-                disabled={showAnswer}
-                className={`block w-full rounded-md border p-3 text-left transition-all ${
-                  selectedAnswer === option.charAt(0)
-                    ? "border-blue-400 bg-blue-100 ring-2 ring-blue-300"
-                    : "border-slate-300 bg-white hover:bg-slate-50"
-                } ${
-                  showAnswer && quizResult?.correctAnswer === option.charAt(0)
-                    ? "border-green-500 bg-green-100 font-semibold text-green-700"
-                    : ""
-                } ${
-                  showAnswer &&
-                  selectedAnswer === option.charAt(0) &&
-                  !quizResult?.isCorrect
-                    ? "border-red-500 bg-red-100 text-red-700"
-                    : ""
-                } ${showAnswer ? "cursor-not-allowed" : "cursor-pointer"}`}
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* 주관식 문제 */}
-        {(!currentQuiz.options || currentQuiz.options.length === 0) && (
-          <textarea
-            value={selectedAnswer || ""}
-            onChange={(e) => setSelectedAnswer(e.target.value)}
-            disabled={showAnswer}
-            placeholder="답안을 입력해주세요..."
-            className="w-full rounded-lg border p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-            rows={4}
-          />
-        )}
-      </div>
-
-      {/* 정답 및 해설 */}
-      {showAnswer && quizResult && (
-        <div className="mb-6 rounded-md border border-sky-200 bg-sky-50 p-4">
-          <h3 className="font-semibold text-sky-700">정답 및 해설</h3>
-          <p className="mt-1 text-sm text-sky-600">
-            <strong>정답:</strong> {quizResult.correctAnswer}
-          </p>
-          <p className="mt-1 text-sm text-sky-600">
-            <strong>내 답:</strong> {quizResult.userAnswer}
-          </p>
-          {quizResult.explanation && (
-            <p className="mt-1 text-sm text-sky-600">
-              <strong>해설:</strong> {quizResult.explanation}
-            </p>
-          )}
-          <p
-            className={`mt-2 font-semibold ${quizResult.isCorrect ? "text-green-600" : "text-red-600"}`}
+        <div className="space-y-3">
+          <button
+            key={1}
+            onClick={() => handleAnswerSelect(1)}
+            className={`block w-full rounded-md border p-3 text-left transition-all ${
+              selectedAnswer.includes(1)
+                ? "border-blue-400 bg-blue-100 ring-2 ring-blue-300"
+                : "border-slate-300 bg-white hover:bg-slate-50"
+            }`}
           >
-            {quizResult.isCorrect ? "✅ 정답입니다!" : "❌ 틀렸습니다."}
-          </p>
+            1. {currentQuiz.options?.[0] || "선택지를 불러올 수 없습니다."}
+          </button>
+          <button
+            key={2}
+            onClick={() => handleAnswerSelect(2)}
+            className={`block w-full rounded-md border p-3 text-left transition-all ${
+              selectedAnswer.includes(2)
+                ? "border-blue-400 bg-blue-100 ring-2 ring-blue-300"
+                : "border-slate-300 bg-white hover:bg-slate-50"
+            }`}
+          >
+            2. {currentQuiz.options?.[1] || "선택지를 불러올 수 없습니다."}
+          </button>
+          <button
+            key={3}
+            onClick={() => handleAnswerSelect(3)}
+            className={`block w-full rounded-md border p-3 text-left transition-all ${
+              selectedAnswer.includes(3)
+                ? "border-blue-400 bg-blue-100 ring-2 ring-blue-300"
+                : "border-slate-300 bg-white hover:bg-slate-50"
+            }`}
+          >
+            3. {currentQuiz.options?.[2] || "선택지를 불러올 수 없습니다."}
+          </button>
+          <button
+            key={4}
+            onClick={() => handleAnswerSelect(4)}
+            className={`block w-full rounded-md border p-3 text-left transition-all ${
+              selectedAnswer.includes(4)
+                ? "border-blue-400 bg-blue-100 ring-2 ring-blue-300"
+                : "border-slate-300 bg-white hover:bg-slate-50"
+            }`}
+          >
+            4. {currentQuiz.options?.[3] || "선택지를 불러올 수 없습니다."}
+          </button>
         </div>
-      )}
+      </div>
 
       {/* 액션 버튼 */}
       <div className="mt-8 flex items-center justify-between">
@@ -407,17 +361,11 @@ export default function QuizPage() {
         </Link>
 
         <button
-          onClick={showAnswer ? handleNextQuestion : handleSubmitAnswer}
+          onClick={handleSubmitAnswer}
           className="rounded-md bg-green-500 px-6 py-2 font-semibold text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:bg-slate-300"
-          disabled={(!selectedAnswer && !showAnswer) || submitting}
+          disabled={submitting}
         >
-          {submitting
-            ? "제출 중..."
-            : showAnswer
-              ? currentQuestionIndex === quizData.totalQuestions - 1
-                ? "결과 보기"
-                : "다음 문제"
-              : "정답 확인"}
+          {submitting ? "제출 중..." : "제출"}
         </button>
       </div>
     </div>

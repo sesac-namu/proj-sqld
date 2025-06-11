@@ -1,0 +1,1 @@
+ALTER TABLE `test_quiz` ADD `correct` boolean;

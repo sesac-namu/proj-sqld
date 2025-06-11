@@ -1,4 +1,4 @@
-import { datetime, int, mysqlTable } from "drizzle-orm/mysql-core";
+import { boolean, datetime, int, mysqlTable } from "drizzle-orm/mysql-core";
 import { quiz } from "./quiz";
 import { test } from "./test";
 
@@ -16,6 +16,7 @@ export const testQuiz = mysqlTable("test_quiz", {
     }),
   quizNumber: int("quiz_number"),
   solvedAt: datetime("solved_at"),
+  correct: boolean("correct"),
 });
 
 export type TestQuiz = typeof testQuiz.$inferSelect;

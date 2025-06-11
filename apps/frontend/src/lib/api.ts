@@ -160,15 +160,14 @@ export interface ApiResponse<T> {
   success?: boolean;
 }
 
-async function apiCall<T>(url: string, options: RequestInit = {}): Promise<T> {
+async function apiCall<T = unknown>(
+  url: string,
+  options: RequestInit = {},
+): Promise<T> {
   try {
     console.log(`🚀 API 호출: ${options.method || "GET"} ${url}`);
 
     const response = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
       ...options,
     });
 
@@ -398,11 +397,11 @@ export const quizApi = {
   async submitAnswer(
     testId: string,
     quizNumber: number,
-    answer: string,
+    answers: number[],
   ): Promise<unknown> {
     const response = await apiCall(`/api/test/${testId}/${quizNumber}`, {
       method: "POST",
-      body: JSON.stringify({ answer }),
+      body: JSON.stringify({ answers }),
     });
     return response;
   },

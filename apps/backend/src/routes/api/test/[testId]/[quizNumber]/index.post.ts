@@ -4,7 +4,7 @@ import { testQuiz } from "~/db/schema/test-quiz";
 import { testQuizChoice } from "~/db/schema/test-quiz-choice";
 
 export default defineEventHandler({
-  onRequest: [requireAuth],
+  // onRequest: [requireAuth],
   handler: async (event) => {
     const testId = Number.parseInt(getRouterParam(event, "testId"));
     const quizNumber = Number.parseInt(getRouterParam(event, "quizNumber"));
@@ -17,18 +17,7 @@ export default defineEventHandler({
       });
     }
 
-    const { answers } = await readBody<TestQuizSolve>(event);
-    const answersSet = new Set(answers);
-
-    for (const answer of answersSet) {
-      if (answer < 1 || answer > 4) {
-        throw createError({
-          status: 400,
-          statusMessage: "Invalid answer",
-          message: "Each answer must be between 1 and 4.",
-        });
-      }
-    }
+    const { answers } = await JSON.parse(await readBody(event));
 
     await db.transaction(async (tx) => {
       const { testQuizId, solvedAt } = (
@@ -53,7 +42,7 @@ export default defineEventHandler({
           .where(eq(testQuizChoice.testQuizId, testQuizId));
       }
 
-      for (const answer of answersSet) {
+      for (const answer of answers) {
         await tx.insert(testQuizChoice).values({
           testQuizId: testQuizId,
           userChoice: answer,
@@ -70,6 +59,7 @@ export default defineEventHandler({
 
     return {
       ok: true,
+      answers,
     };
   },
 });

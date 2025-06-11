@@ -1,5 +1,5 @@
 import { createFetch } from "@better-fetch/fetch";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { env } from "@/env";
 
 const backendApiFetch = createFetch({
