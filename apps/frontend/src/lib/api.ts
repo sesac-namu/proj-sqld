@@ -1,5 +1,3 @@
-// 🔥 apps/frontend/src/lib/api.ts 파일 전체를 이 코드로 교체하세요
-
 export interface User {
   id: string;
   name: string;
@@ -221,15 +219,13 @@ export const testApi = {
     const testsWithRealStatus = await Promise.all(
       response.data.map(async (test: Test): Promise<TestUI> => {
         try {
-          console.log(`🔥 테스트 ${test.id} 퀴즈 리스트 확인 중...`);
+          console.log(`🔥 테스트 ${test.id} 처리 시작`);
 
           const quizListResponse = await apiCall<
             ApiResponse<{ quizList: QuizListItem[] }>
           >(`/api/test/${test.id}/quiz-list`);
 
           const quizList = quizListResponse.data.quizList;
-          console.log(`테스트 ${test.id} 퀴즈 리스트:`, quizList);
-
           const totalQuizzes = quizList.length;
           const solvedQuizzes = quizList.filter(
             (quiz) => quiz.solved === true,
@@ -237,40 +233,98 @@ export const testApi = {
           const isReallyFinished =
             totalQuizzes > 0 && solvedQuizzes === totalQuizzes;
 
-          console.log(`✅ 테스트 ${test.id} 실제 완료 상태:`, {
-            총문제수: totalQuizzes,
-            푼문제수: solvedQuizzes,
-            백엔드_finishedAt: test.finishedAt,
-            백엔드_score: test.score,
-            실제_완료상태: isReallyFinished,
-          });
+          let realScore = 0;
+
+          if (isReallyFinished && totalQuizzes > 0) {
+            try {
+              console.log(`🔥 테스트 ${test.id} 실제 점수 계산 시작`);
+
+              const resultResponse = await apiCall<
+                ApiResponse<TestResultResponse>
+              >(`/api/test/${test.id}/result`);
+
+              if (resultResponse.data?.quizList) {
+                let correctCount = 0;
+
+                resultResponse.data.quizList.forEach((item, index) => {
+                  const correctAnswer = item.answers?.[0];
+                  const userAnswer = item.userChoices?.[0];
+
+                  const isCorrect =
+                    correctAnswer &&
+                    userAnswer &&
+                    typeof correctAnswer === "number" &&
+                    typeof userAnswer === "number" &&
+                    correctAnswer === userAnswer;
+
+                  if (isCorrect) {
+                    correctCount++;
+                  }
+
+                  console.log(`테스트 ${test.id} 문제 ${index + 1}:`, {
+                    정답: correctAnswer,
+                    사용자답: userAnswer,
+                    정답여부: isCorrect ? "✅" : "❌",
+                  });
+                });
+
+                realScore = correctCount * 2;
+
+                console.log(`✅ 테스트 ${test.id} 점수 계산 완료:`, {
+                  총문제: totalQuizzes,
+                  정답수: correctCount,
+                  점수: realScore * 2,
+                  정답률: `${Math.round((correctCount / totalQuizzes) * 100)}%`,
+                });
+              }
+            } catch (error) {
+              console.warn(`❌ 테스트 ${test.id} 점수 계산 실패:`, error);
+              realScore = test.score || 0;
+            }
+          } else {
+            realScore = 0;
+          }
 
           return {
             id: test.id.toString(),
-            title: `SQLD 테스트 #${test.id}`,
-            description: "SQLD 자격증 시험 대비 문제입니다.",
+            title: `SQLD 시험 #${test.id}`,
+            description: "모의고사 문제 50개",
             totalQuestions: totalQuizzes,
             createdAt: test.createdAt,
             isFinished: isReallyFinished,
-            score: test.score,
+            score: realScore,
           } as TestUI;
         } catch (error) {
-          console.warn(`❌ 테스트 ${test.id} 퀴즈 리스트 확인 실패:`, error);
+          console.warn(`❌ 테스트 ${test.id} 처리 실패:`, error);
 
           return {
             id: test.id.toString(),
-            title: `SQLD 테스트 #${test.id}`,
-            description: "SQLD 자격증 시험 대비 문제입니다.",
+            title: `SQLD 시험 #${test.id}`,
+            description: "모의고사 문제 50개",
             totalQuestions: undefined,
             createdAt: test.createdAt,
             isFinished: false,
-            score: test.score,
+            score: 0,
           } as TestUI;
         }
       }),
     );
 
-    console.log("✅ 최종 변환된 테스트 목록:", testsWithRealStatus);
+    console.log("🎯 최종 계산된 점수들:");
+    testsWithRealStatus.forEach((test) => {
+      if (test.isFinished) {
+        console.log(
+          `테스트 ${test.id}: ${test.score}/${test.totalQuestions}점 (${
+            test.totalQuestions && test.totalQuestions > 0
+              ? Math.round((test.score! / test.totalQuestions) * 100)
+              : 0
+          }%)`,
+        );
+      } else {
+        console.log(`테스트 ${test.id}: 미완료`);
+      }
+    });
+
     return testsWithRealStatus;
   },
 
@@ -303,7 +357,6 @@ export const testApi = {
     return response.data.quizList;
   },
 
-  // 🔥 수정된 getResult 함수 - userChoices 처리
   async getResult(testId: string): Promise<TestResult> {
     const response = await apiCall<ApiResponse<TestResultResponse>>(
       `/api/test/${testId}/result`,
@@ -315,7 +368,6 @@ export const testApi = {
     const quizResults = resultData.quizList.map((item) => {
       const quiz = item.quiz;
 
-      // 🔥 정답 인덱스 추출
       const correctAnswerIndex =
         item.answers && Array.isArray(item.answers) && item.answers.length > 0
           ? item.answers[0]
@@ -328,7 +380,6 @@ export const testApi = {
           ? correctAnswerIndex
           : 1;
 
-      // 🔥 사용자 답안 추출 (userChoices에서)
       let userAnswerIndex: number | null = null;
       if (
         item.userChoices &&
@@ -345,37 +396,44 @@ export const testApi = {
         }
       }
 
-      // 🔥 정답 확인
       const isCorrect =
         userAnswerIndex !== null && userAnswerIndex === safeAnswerIndex;
 
       console.log(`문제 ${quiz.id} 결과:`, {
         정답: safeAnswerIndex,
         사용자답: userAnswerIndex,
-        정답여부: isCorrect,
-        원본userChoices: item.userChoices,
+        정답여부: isCorrect ? "✅" : "❌",
+        원본답안: item.answers,
+        원본사용자답: item.userChoices,
       });
 
       return {
         quiz: quiz,
-        isCorrect: isCorrect, // 🔥 실제 정답 여부
-        correctAnswer: safeAnswerIndex.toString(), // 🔥 "1", "2", "3", "4" 형태
-        userAnswer: userAnswerIndex ? userAnswerIndex.toString() : "", // 🔥 사용자 답안
+        isCorrect: isCorrect,
+        correctAnswer: safeAnswerIndex.toString(),
+        userAnswer: userAnswerIndex ? userAnswerIndex.toString() : "",
         explanation: quiz.answer_explanation.replace(/^해설:\s*/, ""),
       };
     });
 
-    const correctCount = quizResults.filter((r) => r.isCorrect).length;
+    const realCorrectCount = quizResults.filter((r) => r.isCorrect).length;
+    const totalQuestions = resultData.quizList.length;
+    const realPercentage =
+      totalQuestions > 0 ? (realCorrectCount / totalQuestions) * 100 : 0;
+
+    console.log("🎯 실제 계산된 결과:", {
+      총문제수: totalQuestions,
+      실제정답수: realCorrectCount * 2,
+      백엔드점수: resultData.test.score,
+      실제정답률: `${realPercentage.toFixed(1)}%`,
+    });
 
     const finalResult: TestResult = {
       test: resultData.test,
-      totalQuestions: resultData.quizList.length,
-      correctAnswers: correctCount, // 🔥 실제 정답 개수
-      score: resultData.test.score || 0,
-      percentage:
-        resultData.quizList.length > 0
-          ? (correctCount / resultData.quizList.length) * 100
-          : 0,
+      totalQuestions: totalQuestions,
+      correctAnswers: realCorrectCount,
+      score: realCorrectCount * 2,
+      percentage: realPercentage,
       quizResults: quizResults,
     };
 
@@ -387,10 +445,27 @@ export const testApi = {
     testId: string,
     data?: Record<string, unknown>,
   ): Promise<{ ok: boolean }> {
-    const response = await apiCall<{ ok: boolean }>(`/api/test/${testId}`, {
+    console.log("🚨 testApi.finish 호출됨!");
+    console.log("🚨 testId:", testId);
+    console.log("🚨 data:", data);
+    console.log("🚨 호출 스택:", new Error().stack);
+
+    if (!testId || testId === "undefined" || testId === "null") {
+      throw new Error(`유효하지 않은 testId: ${testId}`);
+    }
+
+    const url = `/api/test/${testId}`;
+    console.log("🚨 요청 URL:", url);
+
+    const response = await apiCall<{ ok: boolean }>(url, {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(data || {}),
     });
+
+    console.log("🚨 testApi.finish 응답:", response);
     return response;
   },
 };
@@ -431,10 +506,26 @@ export const quizApi = {
     quizNumber: number,
     answers: number[],
   ): Promise<unknown> {
+    console.log("🚨 submitAnswer 호출됨:");
+    console.log("🚨 testId:", testId);
+    console.log("🚨 quizNumber:", quizNumber);
+    console.log("🚨 answers:", answers);
+
+    const requestData = {
+      answers: answers,
+    };
+
+    console.log("🚨 실제 전송 데이터:", requestData);
+
     const response = await apiCall(`/api/test/${testId}/${quizNumber}`, {
       method: "POST",
-      body: JSON.stringify({ answers }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestData),
     });
+
+    console.log("🚨 submitAnswer 응답:", response);
     return response;
   },
 

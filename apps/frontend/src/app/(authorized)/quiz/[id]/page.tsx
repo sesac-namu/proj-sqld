@@ -1,4 +1,3 @@
-// app/(authorized)/quiz/[id]/page.tsx
 "use client";
 
 import Link from "next/link";
@@ -33,8 +32,6 @@ export default function QuizPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // 🔥 사용자가 선택한 답안을 저장 (임시 해결책)
-  // 테스트 데이터 및 첫 번째 퀴즈 로드
   const loadQuizData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -42,11 +39,9 @@ export default function QuizPage() {
     try {
       console.log("🔥 테스트 데이터 로딩 시작:", testId);
 
-      // 1. 테스트 정보 가져오기
       const testInfo: Test = await testApi.getById(testId);
       console.log("✅ 테스트 정보:", testInfo);
 
-      // 2. 퀴즈 리스트 가져오기
       const quizList: QuizListItem[] = await testApi.getQuizList(testId);
       console.log("✅ 퀴즈 리스트:", quizList);
 
@@ -54,7 +49,6 @@ export default function QuizPage() {
         throw new Error("이 테스트에는 문제가 없습니다.");
       }
 
-      // 3. 첫 번째 퀴즈 상세 정보 가져오기
       const firstQuizItem = quizList[0];
       console.log("🔥 첫 번째 퀴즈 아이템:", firstQuizItem);
 
@@ -86,7 +80,6 @@ export default function QuizPage() {
     }
   }, [testId]);
 
-  // 다음 문제 로드
   const loadNextQuestion = async (questionIndex: number) => {
     try {
       if (!quizData) return;
@@ -124,24 +117,21 @@ export default function QuizPage() {
       loadQuizData();
     }
   }, [testId, loadQuizData]);
-  // 답안 선택
+
   const handleAnswerSelect = (answer: number) => {
     if (!quizData?.currentQuiz) return;
 
     if (quizData.currentQuiz.multiple) {
-      // 다중 선택인 경우
       if (selectedAnswer.includes(answer)) {
         setSelectedAnswer(selectedAnswer.filter((a) => a !== answer));
       } else {
         setSelectedAnswer([...selectedAnswer, answer]);
       }
     } else {
-      // 단일 선택인 경우
       setSelectedAnswer([answer]);
     }
   };
 
-  // 다음 문제로
   const handleNextQuestion = async () => {
     setSelectedAnswer([]);
 
@@ -150,11 +140,40 @@ export default function QuizPage() {
       await loadNextQuestion(nextIndex);
       setCurrentQuestionIndex(nextIndex);
     } else {
-      // 테스트 완료 처리
       try {
-        await testApi.finish(testId);
+        console.log("🔥 테스트 완료 처리 시작");
+        console.log("🔥 현재 testId:", testId);
+
+        if (!testId || testId === "undefined" || testId === "null") {
+          throw new Error("testId가 유효하지 않습니다: " + testId);
+        }
+
+        console.log("🔥 testApi.finish 호출 전");
+        const finishResult = await testApi.finish(testId);
+        console.log("🔥 testApi.finish 결과:", finishResult);
+
+        try {
+          console.log("🔥 testApi.getResult 호출 전");
+          const testResult = await testApi.getResult(testId);
+          console.log("🔥 testApi.getResult 결과:", testResult);
+
+          const realScore = testResult.correctAnswers;
+
+          console.log("🎯 실제 계산된 최종 점수:", {
+            testId: testId,
+            총문제: testResult.totalQuestions,
+            정답수: realScore,
+            정답률: `${testResult.percentage.toFixed(1)}%`,
+          });
+
+          setScore(realScore);
+        } catch (error) {
+          console.warn("점수 계산 실패, 기본 점수 사용:", error);
+        }
+
         setIsQuizFinished(true);
       } catch (err) {
+        console.error("🔥 테스트 완료 처리 에러:", err);
         apiErrorHandler.showError(err);
       }
     }
@@ -168,7 +187,6 @@ export default function QuizPage() {
 
     setSubmitting(true);
     try {
-      // 답안 제출
       (await quizApi.submitAnswer(
         testId,
         quizData.currentQuiz.quizNumber,
@@ -184,7 +202,6 @@ export default function QuizPage() {
     }
   };
 
-  // 로딩 상태
   if (loading) {
     return (
       <div className="flex min-h-96 items-center justify-center">
@@ -193,7 +210,6 @@ export default function QuizPage() {
     );
   }
 
-  // 에러 상태
   if (error) {
     return (
       <div className="flex min-h-96 flex-col items-center justify-center">
@@ -224,7 +240,6 @@ export default function QuizPage() {
     );
   }
 
-  // 퀴즈 완료 화면
   if (isQuizFinished) {
     return (
       <div className="mx-auto mt-10 max-w-lg rounded-lg bg-white p-8 text-center shadow-xl">
