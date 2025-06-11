@@ -1,3 +1,5 @@
+//// app/(authorized)/quiz/page.tsx
+
 "use client";
 
 import Link from "next/link";
@@ -105,6 +107,7 @@ export default function QuizListPage() {
       </div> */}
 
       {/* 테스트 목록 */}
+      {/* 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥 */}
       <div className="grid gap-6 p-7 md:grid-cols-2 lg:grid-cols-3">
         {tests.length > 0 ? (
           tests.map((test) => (
@@ -141,6 +144,7 @@ export default function QuizListPage() {
                   {test.score}
                 </div> */}
 
+                {/* 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥 */}
                 {/* 점수 표시 (완료된 경우만) */}
                 {test.isFinished && test.score !== null && (
                   <div className="text-xs text-slate-500">

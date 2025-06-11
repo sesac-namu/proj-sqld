@@ -1,3 +1,5 @@
+// 🔥 apps/frontend/src/lib/api.ts 파일 전체를 이 코드로 교체하세요
+
 export interface User {
   id: string;
   name: string;
@@ -301,15 +303,19 @@ export const testApi = {
     return response.data.quizList;
   },
 
+  // 🔥 수정된 getResult 함수 - userChoices 처리
   async getResult(testId: string): Promise<TestResult> {
     const response = await apiCall<ApiResponse<TestResultResponse>>(
       `/api/test/${testId}/result`,
     );
     const resultData = response.data;
 
+    console.log("🔥 테스트 결과 원본 데이터:", resultData);
+
     const quizResults = resultData.quizList.map((item) => {
       const quiz = item.quiz;
 
+      // 🔥 정답 인덱스 추출
       const correctAnswerIndex =
         item.answers && Array.isArray(item.answers) && item.answers.length > 0
           ? item.answers[0]
@@ -322,26 +328,49 @@ export const testApi = {
           ? correctAnswerIndex
           : 1;
 
-      const answerLetters: readonly string[] = ["A", "B", "C", "D"];
-      const correctAnswerLetter: string = answerLetters[
-        safeAnswerIndex - 1
-      ] as string;
+      // 🔥 사용자 답안 추출 (userChoices에서)
+      let userAnswerIndex: number | null = null;
+      if (
+        item.userChoices &&
+        Array.isArray(item.userChoices) &&
+        item.userChoices.length > 0
+      ) {
+        const firstChoice = item.userChoices[0];
+        if (
+          typeof firstChoice === "number" &&
+          firstChoice >= 1 &&
+          firstChoice <= 4
+        ) {
+          userAnswerIndex = firstChoice;
+        }
+      }
+
+      // 🔥 정답 확인
+      const isCorrect =
+        userAnswerIndex !== null && userAnswerIndex === safeAnswerIndex;
+
+      console.log(`문제 ${quiz.id} 결과:`, {
+        정답: safeAnswerIndex,
+        사용자답: userAnswerIndex,
+        정답여부: isCorrect,
+        원본userChoices: item.userChoices,
+      });
 
       return {
         quiz: quiz,
-        isCorrect: false,
-        correctAnswer: correctAnswerLetter,
-        userAnswer: "",
+        isCorrect: isCorrect, // 🔥 실제 정답 여부
+        correctAnswer: safeAnswerIndex.toString(), // 🔥 "1", "2", "3", "4" 형태
+        userAnswer: userAnswerIndex ? userAnswerIndex.toString() : "", // 🔥 사용자 답안
         explanation: quiz.answer_explanation.replace(/^해설:\s*/, ""),
       };
     });
 
     const correctCount = quizResults.filter((r) => r.isCorrect).length;
 
-    return {
+    const finalResult: TestResult = {
       test: resultData.test,
       totalQuestions: resultData.quizList.length,
-      correctAnswers: correctCount,
+      correctAnswers: correctCount, // 🔥 실제 정답 개수
       score: resultData.test.score || 0,
       percentage:
         resultData.quizList.length > 0
@@ -349,6 +378,9 @@ export const testApi = {
           : 0,
       quizResults: quizResults,
     };
+
+    console.log("✅ 최종 변환된 테스트 결과:", finalResult);
+    return finalResult;
   },
 
   async finish(
