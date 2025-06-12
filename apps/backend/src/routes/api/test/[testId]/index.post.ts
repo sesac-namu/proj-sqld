@@ -79,11 +79,14 @@ export default defineEventHandler({
       }));
 
     await db.transaction(async (tx) => {
-      await tx.update(test).set({
-        updatedAt: sql`CURRENT_TIMESTAMP`,
-        finishedAt: sql`CURRENT_TIMESTAMP`,
-        score: quizListWithAnswers.filter((q) => q.correct).length * 2,
-      });
+      await tx
+        .update(test)
+        .set({
+          updatedAt: sql`CURRENT_TIMESTAMP`,
+          finishedAt: sql`CURRENT_TIMESTAMP`,
+          score: quizListWithAnswers.filter((q) => q.correct).length * 2,
+        })
+        .where(eq(test.id, testId));
 
       for (const q of quizListWithAnswers) {
         await tx
