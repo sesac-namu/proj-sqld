@@ -17,7 +17,7 @@ export default defineEventHandler({
       });
     }
 
-    const { answers } = await JSON.parse(await readBody(event));
+    const { answers } = await readBody<{ answers: number[] }>(event);
 
     await db.transaction(async (tx) => {
       const { testQuizId, solvedAt } = (
