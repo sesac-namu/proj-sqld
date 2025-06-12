@@ -196,9 +196,9 @@ export default function TestPage() {
       await quizApi.submitAnswer(testId, i, [1]);
     }
 
-    // await fetch(`/api/test/${testId}`, {
-    //   method: "post",
-    // });
+    await fetch(`/api/test/${testId}`, {
+      method: "post",
+    });
 
     setLoading(false);
   };

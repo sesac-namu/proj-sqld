@@ -41,7 +41,10 @@ export default function MyPageQuickAction() {
           </svg>
           <span>퀴즈 풀기</span>
         </Link>
-        <button className="flex w-full items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-3 font-medium text-white transition-all duration-200 hover:from-emerald-600 hover:to-teal-700">
+        <Link
+          href="/statistics"
+          className="flex w-full items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-3 font-medium text-white transition-all duration-200 hover:from-emerald-600 hover:to-teal-700"
+        >
           <svg
             className="h-4 w-4"
             fill="none"
@@ -56,7 +59,7 @@ export default function MyPageQuickAction() {
             />
           </svg>
           <span>학습 통계</span>
-        </button>
+        </Link>
       </div>
     </div>
   );

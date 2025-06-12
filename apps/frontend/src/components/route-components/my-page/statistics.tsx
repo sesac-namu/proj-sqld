@@ -4,10 +4,10 @@ import { serverFetch } from "@/lib/fetch";
 export default async function MyPageStatistics() {
   const header = await headers();
   const [finishedTests, answerRate] = await Promise.all([
-    serverFetch<number>("/api/test/stats/finished", {
+    serverFetch<number>("/api/stats/finished", {
       headers: header,
     }),
-    serverFetch<number>("/api/test/stats/answer-rate", {
+    serverFetch<number>("/api/stats/answer-rate", {
       headers: header,
     }),
   ]);
@@ -65,7 +65,7 @@ export default async function MyPageStatistics() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-2xl font-bold text-emerald-600">
-                {(answerRate.data || 0) * 100}%
+                {answerRate.data || 0}%
               </div>
               <div className="text-sm font-medium text-emerald-600">정답률</div>
             </div>

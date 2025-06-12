@@ -1,6 +1,6 @@
-import { and, count, eq, isNotNull } from "drizzle-orm";
+import { and, eq, isNotNull } from "drizzle-orm";
 import { db } from "~/db";
-import { quiz, quizAnswer, test, testQuiz } from "~/db/schema";
+import { test, testQuiz } from "~/db/schema";
 
 export default defineEventHandler({
   onRequest: [requireAuth],
@@ -24,6 +24,6 @@ export default defineEventHandler({
     const count = answers.length;
     const correctCount = answers.filter((a) => a.correct).length;
 
-    return correctCount / count || 0;
+    return Math.round((correctCount / count) * 1000) / 10 || 0;
   },
 });
