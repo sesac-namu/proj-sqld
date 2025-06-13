@@ -1,7 +1,7 @@
 import pymysql
 from glob import glob
 import pandas as pd
-from data_process import read_files, drop_dupli
+from process.data_process import read_files, drop_dupli
 
 def connect_database():
     try:
@@ -16,6 +16,9 @@ def connect_database():
     except Exception as e:
             print(f"데이터베이스 연결 오류: {e}")
             return None
+    
+def create_table():
+    pass
     
 def insert(df):
     connection = connect_database()

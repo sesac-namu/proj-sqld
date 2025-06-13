@@ -165,3 +165,7 @@ staticfiles/
 # output/
 # results/
 data/
+img_test/
+download_imgs/
+data.csv
+data.tar.gz
